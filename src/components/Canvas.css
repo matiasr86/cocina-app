@@ -1,0 +1,90 @@
+.canvas-root {
+  flex: 1;
+  position: relative;
+}
+
+.canvas-label {
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.canvas-container {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  margin-bottom: 12px;
+  /* margen visual para los ejes */
+  padding-left: 50px;   /* AXIS_MARGIN */
+  padding-bottom: 50px; /* BOTTOM_MARGIN */
+}
+
+/* Etiquetas eje Y */
+.y-label {
+  position: absolute;
+  left: 0;
+  font-size: 10px;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Etiquetas eje X */
+.label {
+  position: absolute;
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.horizontal-label {
+  transform: translateX(-50%);
+}
+
+/* El lienzo 2D con grilla */
+.canvas {
+  position: absolute;
+  border: 2px solid #000;
+  overflow: visible;
+
+  /* Grilla con CSS variable --grid-step (seteada inline) */
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      #d9d9d9 0,
+      #d9d9d9 1px,
+      transparent 1px,
+      transparent var(--grid-step, 25px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      #d9d9d9 0,
+      #d9d9d9 1px,
+      transparent 1px,
+      transparent var(--grid-step, 25px)
+    );
+  background-position: left bottom, left bottom;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* Controles */
+.canvas-settings {
+  margin-top: 6px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.canvas-settings label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.canvas-settings input {
+  width: 80px;
+  padding: 4px;
+}
