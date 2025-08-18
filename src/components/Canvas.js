@@ -1,226 +1,185 @@
 import React, { useState, useRef, useCallback } from 'react';
 import './Canvas.css';
+import Module from './Module';
 
 const AXIS_MARGIN = 50;
 const BOTTOM_MARGIN = 50;
 const GRID_STEP = 25;
 const LABEL_STEP = 50;
 
-const Canvas = ({ label, initialWidth = 4, initialHeight = 3 }) => {
+export default function Canvas({ label, initialWidth = 4, initialHeight = 3 }) {
   const [modules, setModules] = useState([]);
-  const [dragInfo, setDragInfo] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const canvasRef = useRef(null);
 
-  const pxW = initialWidth * 100;
+  const pxW = initialWidth * 100; // ancho útil (sin márgenes)
   const pxH = initialHeight * 100;
 
-  const hasCollision = (newMod, excludeId = null) => {
-    return modules.some(mod => {
-      if (mod.id === excludeId) return false;
+  const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
+
+  const sanitizeRect = (rect) => ({
+    ...rect,
+    width: Math.max(10, rect.width),
+    height: Math.max(10, rect.height),
+    x: clamp(rect.x, 0, pxW - rect.width),
+    y: clamp(rect.y, 0, pxH - rect.height),
+  });
+
+  const collides = (rect, ignoreId = null) =>
+    modules.some((m) => {
+      if (m.id === ignoreId) return false;
       return (
-        newMod.x < mod.x + mod.width &&
-        newMod.x + newMod.width > mod.x &&
-        newMod.y < mod.y + mod.height &&
-        newMod.y + newMod.height > mod.y
+        rect.x < m.x + m.width &&
+        rect.x + rect.width > m.x &&
+        rect.y < m.y + m.height &&
+        rect.y + rect.height > m.y
       );
     });
-  };
+
+  const handleCanvasClick = () => setSelectedId(null);
 
   const handleCanvasDragOver = useCallback((e) => {
     const hasPayload = e.dataTransfer?.types?.includes('application/x-module');
-    if (hasPayload || dragInfo) e.preventDefault();
-  }, [dragInfo]);
+    if (hasPayload) e.preventDefault();
+  }, []);
 
   const handleCanvasDrop = useCallback((e) => {
-    const el = canvasRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const dropX = e.clientX - rect.left - AXIS_MARGIN;
-    const dropY = e.clientY - rect.top;
-
-    if (dragInfo) {
-      e.preventDefault();
-      const newX = dropX - dragInfo.offsetX;
-      const newY = dropY - dragInfo.offsetY;
-      const updated = modules.map(mod => {
-        if (mod.id !== dragInfo.id) return mod;
-        const proposed = {
-          ...mod,
-          x: Math.max(0, Math.min(newX, pxW - mod.width)),
-          y: Math.max(0, Math.min(pxH - newY - mod.height, pxH - mod.height))
-        };
-        return hasCollision(proposed, mod.id) ? mod : proposed;
-      });
-      setModules(updated);
-      setDragInfo(null);
-      return;
-    }
-
     const payload = e.dataTransfer.getData('application/x-module');
     if (!payload) return;
     e.preventDefault();
 
     let data;
-    try {
-      data = JSON.parse(payload);
-    } catch {
-      return;
-    }
+    try { data = JSON.parse(payload); } catch { return; }
 
-    const width = Math.max(10, Math.round(data.width ?? 60));
+    const rect = canvasRef.current.getBoundingClientRect();
+    const dropX = e.clientX - rect.left - AXIS_MARGIN;
+    const dropY = e.clientY - rect.top;
+
+    const width  = Math.max(10, Math.round(data.width ?? 60));
     const height = Math.max(10, Math.round(data.height ?? 60));
-    const x = Math.max(0, Math.min(dropX, pxW - width));
-    const y = Math.max(0, Math.min(pxH - dropY - height, pxH - height));
 
-    const newModule = {
+    const raw = {
       id: crypto.randomUUID(),
-      kind: data.kind || 'image',
-      x, y, width, height,
+      x: dropX,
+      y: pxH - dropY - height, // origen abajo
+      width,
+      height,
       src: data.src || null,
-      color: data.color || '#ccc'
+      color: data.color || 'transparent',
     };
 
-    if (!hasCollision(newModule)) {
-      setModules(prev => [...prev, newModule]);
-    }
-  }, [dragInfo, pxW, pxH, modules]);
+    const proposed = sanitizeRect(raw);
+    if (collides(proposed, null)) return; // no permitir solapar al crear
 
-  const handleMouseDown = (e, mod) => {
-    e.stopPropagation();
-    setSelectedId(mod.id);
-    const rect = canvasRef.current.getBoundingClientRect();
-    setDragInfo({
-      id: mod.id,
-      offsetX: e.clientX - rect.left - AXIS_MARGIN - mod.x,
-      offsetY: e.clientY - rect.top - (pxH - mod.y - mod.height)
-    });
+    setModules((p) => [...p, proposed]);
+    setSelectedId(proposed.id);
+  }, [pxH, pxW, modules]);
+
+  // 🔴 Autoridad ÚNICA para mover/redimensionar: clamp + colisión.
+  const handleUpdateModule = (id, partial) => {
+    setModules((prev) =>
+      prev.map((m) => {
+        if (m.id !== id) return m;
+        let proposed = sanitizeRect({ ...m, ...partial });
+        if (collides(proposed, id)) return m; // rechazo: no se mueve
+        return proposed;
+      })
+    );
   };
-
-  const handleMouseMove = useCallback((e) => {
-    if (!dragInfo) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const newX = e.clientX - rect.left - AXIS_MARGIN - dragInfo.offsetX;
-    const newY = e.clientY - rect.top - dragInfo.offsetY;
-    setModules(prev => prev.map(mod => {
-      if (mod.id !== dragInfo.id) return mod;
-      const proposed = {
-        ...mod,
-        x: Math.max(0, Math.min(newX, pxW - mod.width)),
-        y: Math.max(0, Math.min(pxH - newY - mod.height, pxH - mod.height))
-      };
-      return hasCollision(proposed, mod.id) ? mod : proposed;
-    }));
-  }, [dragInfo, pxW, pxH, modules]);
-
-  const handleMouseUp = () => {
-    if (dragInfo) setDragInfo(null);
-  };
-
-  const handleCanvasClick = () => setSelectedId(null);
 
   const handleDelete = () => {
-    if (selectedId) {
-      setModules(prev => prev.filter(m => m.id !== selectedId));
-      setSelectedId(null);
-    }
+    if (!selectedId) return;
+    setModules((p) => p.filter((m) => m.id !== selectedId));
+    setSelectedId(null);
   };
 
   const handleEdit = (key, value) => {
-    setModules(prev => prev.map(mod => {
-      if (mod.id !== selectedId) return mod;
-      return { ...mod, [key]: value };
+    if (!selectedId) return;
+    setModules((prev) => prev.map((m) => {
+      if (m.id !== selectedId) return m;
+      let proposed = { ...m };
+      if (key === 'width' || key === 'height') proposed[key] = Math.max(10, Number(value) || 0);
+      else if (key === 'x' || key === 'y')     proposed[key] = Number(value) || 0;
+      else if (key === 'color')                proposed.color = value;
+      proposed = sanitizeRect(proposed);
+      return collides(proposed, m.id) ? m : proposed;
     }));
   };
 
-  const selectedModule = modules.find(m => m.id === selectedId);
+  const selectedModule = modules.find((m) => m.id === selectedId);
 
   return (
     <div style={{ flex: 1 }}>
       <div style={{ padding: 10, fontWeight: 'bold' }}>{label}</div>
+
       <div
         className="canvas-surface"
         ref={canvasRef}
-        style={{ width: pxW + AXIS_MARGIN, height: pxH + BOTTOM_MARGIN }}
+        style={{ width: pxW + AXIS_MARGIN, height: pxH + BOTTOM_MARGIN, position: 'relative' }}
         onDragOver={handleCanvasDragOver}
         onDrop={handleCanvasDrop}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
         onClick={handleCanvasClick}
       >
         <svg width={pxW + AXIS_MARGIN} height={pxH + BOTTOM_MARGIN}>
           <g transform={`translate(${AXIS_MARGIN}, 0)`}>
-            <rect width={pxW} height={pxH} y={0} fill="#fff" stroke="#ccc" />
-            {Array.from({ length: pxW / GRID_STEP + 1 }, (_, i) => (
+            <rect width={pxW} height={pxH} fill="#fff" stroke="#ccc" />
+            {Array.from({ length: Math.floor(pxW / GRID_STEP) + 1 }, (_, i) => (
               <line key={`v${i}`} x1={i * GRID_STEP} y1={0} x2={i * GRID_STEP} y2={pxH} stroke="#eee" />
             ))}
-            {Array.from({ length: pxH / GRID_STEP + 1 }, (_, i) => (
+            {Array.from({ length: Math.floor(pxH / GRID_STEP) + 1 }, (_, i) => (
               <line key={`h${i}`} x1={0} y1={i * GRID_STEP} x2={pxW} y2={i * GRID_STEP} stroke="#eee" />
             ))}
-            {modules.map(mod => (
-              <foreignObject
-                key={mod.id}
-                x={mod.x}
-                y={pxH - mod.y - mod.height}
-                width={mod.width}
-                height={mod.height}
-              >
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    cursor: 'move',
-                    border: mod.id === selectedId ? '2px solid blue' : 'none'
-                  }}
-                  onMouseDown={(e) => handleMouseDown(e, mod)}
-                >
-                  {mod.src ? (
-                    <img
-                      src={mod.src}
-                      alt="img"
-                      width={mod.width}
-                      height={mod.height}
-                      draggable={false}
-                      style={{ pointerEvents: 'none', userSelect: 'none' }}
-                    />
-                  ) : (
-                    <div style={{ backgroundColor: mod.color, width: '100%', height: '100%' }} />
-                  )}
-                </div>
-              </foreignObject>
-            ))}
           </g>
-          {Array.from({ length: pxW / LABEL_STEP + 1 }, (_, i) => (
+
+          {Array.from({ length: Math.floor(pxW / LABEL_STEP) + 1 }, (_, i) => (
             <text key={`x${i}`} x={AXIS_MARGIN + i * LABEL_STEP} y={pxH + 15} fontSize={10}>{i * 50} cm</text>
           ))}
-          {Array.from({ length: pxH / LABEL_STEP + 1 }, (_, i) => (
+          {Array.from({ length: Math.floor(pxH / LABEL_STEP) + 1 }, (_, i) => (
             <text key={`y${i}`} x={2} y={pxH - i * LABEL_STEP} fontSize={10}>{i * 50} cm</text>
           ))}
         </svg>
-        {selectedId && (
-          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, background: 'white', padding: 10, border: '1px solid #ccc' }}>
-            <button onClick={handleDelete} style={{ marginBottom: 10 }}>Eliminar módulo</button>
-            {selectedModule && (
-              <div>
-                <div>
-                  <label>Color: </label>
-                  <input type="color" value={selectedModule.color} onChange={e => handleEdit('color', e.target.value)} />
-                </div>
-                <div>
-                  <label>Ancho (cm): </label>
-                  <input type="number" value={selectedModule.width} onChange={e => handleEdit('width', parseInt(e.target.value, 10))} />
-                </div>
-                <div>
-                  <label>Alto (cm): </label>
-                  <input type="number" value={selectedModule.height} onChange={e => handleEdit('height', parseInt(e.target.value, 10))} />
-                </div>
-              </div>
-            )}
+
+        {modules.map((mod) => (
+          <Module
+            key={mod.id}
+            module={mod}                 // ← fuente de verdad para x/y
+            selected={mod.id === selectedId}
+            onClick={(id) => setSelectedId(id)}
+            onUpdate={handleUpdateModule} // ← Canvas valida
+            axisMargin={AXIS_MARGIN}
+            bottomMargin={BOTTOM_MARGIN}
+          />
+        ))}
+
+        {selectedId && selectedModule && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 10, right: 10, zIndex: 10,
+              background: 'white', padding: 10,
+              border: '1px solid #ccc', borderRadius: 6,
+              boxShadow: '0 2px 6px rgba(0,0,0,.1)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              <button onClick={handleDelete}>Eliminar</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6 }}>
+              <label>Color</label>
+              <input type="color" value={selectedModule.color} onChange={(e) => handleEdit('color', e.target.value)} />
+              <label>Ancho (px)</label>
+              <input type="number" value={selectedModule.width} onChange={(e) => handleEdit('width', e.target.value)} />
+              <label>Alto (px)</label>
+              <input type="number" value={selectedModule.height} onChange={(e) => handleEdit('height', e.target.value)} />
+              <label>X (px)</label>
+              <input type="number" value={selectedModule.x} onChange={(e) => handleEdit('x', e.target.value)} />
+              <label>Y (px)</label>
+              <input type="number" value={selectedModule.y} onChange={(e) => handleEdit('y', e.target.value)} />
+            </div>
           </div>
         )}
       </div>
     </div>
   );
-};
-
-export default Canvas;
+}
