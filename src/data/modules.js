@@ -2,14 +2,14 @@
 const modules = [
   //
     {
-    type: "fridge-right",
+    type: "bm2p",
     title: "BM 2 Puertas",
     subtitle: "1 Estante",
     section: "BM",
-    sectionLabel: "BM",
+    sectionLabel: "BAJO MESADA",
     width: 120,
     height: 91,
-    src: "/assets/modules/fridge-right.png"
+    src: "/assets/modules/bm2p.png"
   },
   {
     type: "fridge-right",
@@ -22,25 +22,16 @@ const modules = [
     src: "/assets/modules/fridge-right.png"
   },
   {
-    type: "fridge-right2",
+    type: "double-fridge-right",
     title: "Heladera 2",
     subtitle: "",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
-    width: 60,
-    height: 200,
-    src: "/assets/modules/fridge-right.png"
+    width: 91,
+    height: 178,
+    src: "/assets/modules/double-fridge-right.png"
   },
-  {
-    type: "fridge-right3",
-    title: "Heladera 3",
-    subtitle: "",
-    section: "ELECTRO",
-    sectionLabel: "ELECTRO",
-    width: 100,
-    height: 180,
-    src: "/assets/modules/fridge-right.png"
-  },
+
   // Aquí podés seguir agregando más módulos...
 ];
 
