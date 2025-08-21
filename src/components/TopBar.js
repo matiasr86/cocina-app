@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function TopBar({ qualityName, onChangeQuality }) {
+export default function TopBar({ qualityName, onChangeQuality, onAdmin }) {
   return (
     <header className="topbar">
       <div className="topbar__brand">Diseñá tu cocina fácil en 2D</div>
@@ -13,6 +13,7 @@ export default function TopBar({ qualityName, onChangeQuality }) {
       </nav>
 
       <div className="topbar__actions">
+        <button className="btn ghost" onClick={onAdmin}>Admin</button>
         {qualityName && (
           <button className="chip" onClick={onChangeQuality} title="Cambiar calidad">
             Calidad: {qualityName}

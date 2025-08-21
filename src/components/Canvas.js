@@ -1,3 +1,4 @@
+// src/components/Canvas.js
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './Canvas.css';
 import Module from './Module';
@@ -14,16 +15,17 @@ export default function Canvas({
   label,
   initialWidth = 4,
   initialHeight = 3,
-  onModulesChange, // 👈 nuevo
+  onModulesChange,
 }) {
   const [modules, setModules] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [sizePrompt, setSizePrompt] = useState(null); // {dropX, dropY, data}
   const canvasRef = useRef(null);
 
   const pxW = initialWidth * 100;
   const pxH = initialHeight * 100;
 
-  // ---------- Persistencia de módulos por pared ----------
+  // Cargar del storage por pared
   useEffect(() => {
     try {
       const raw = localStorage.getItem(modulesKey(wallId));
@@ -34,18 +36,14 @@ export default function Canvas({
     } catch {}
   }, [wallId]);
 
+  // Guardar
   useEffect(() => {
-    try {
-      localStorage.setItem(modulesKey(wallId), JSON.stringify(modules));
-    } catch {}
+    try { localStorage.setItem(modulesKey(wallId), JSON.stringify(modules)); } catch {}
   }, [wallId, modules]);
 
-  // Notificar al parent para el resumen en vivo
-  useEffect(() => {
-    onModulesChange?.(wallId, modules);
-  }, [wallId, modules, onModulesChange]);
+  // Avisar al parent (resumen / totales)
+  useEffect(() => { onModulesChange?.(wallId, modules); }, [wallId, modules, onModulesChange]);
 
-  // ---------- utilidades ----------
   const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
 
   const sanitizeRect = useCallback(
@@ -80,6 +78,35 @@ export default function Canvas({
     if (hasPayload) e.preventDefault();
   }, []);
 
+  // Colocar módulo (setea adjPct a partir de deltaPct de la medida elegida)
+  const finalizeDrop = useCallback(
+    (data, dropX, dropY, width, height) => {
+      let adjPct = 0;
+      if (Array.isArray(data.sizes)) {
+        const found = data.sizes.find((s) => s.width === width && s.height === height);
+        if (found && typeof found.deltaPct === 'number') adjPct = found.deltaPct;
+      }
+      const raw = {
+        id: crypto.randomUUID(),
+        type: data.type,
+        title: data.title || 'Módulo',
+        x: dropX,
+        y: pxH - dropY - height,
+        width,
+        height,
+        adjPct,                     // % de ajuste guardado en la instancia
+        src: data.src || null,
+        color: data.color || 'transparent',
+      };
+      const proposed = sanitizeRect(raw);
+      if (collides(proposed, null)) return;
+      setModules((p) => [...p, proposed]);
+      setSelectedId(proposed.id);
+    },
+    [pxH, sanitizeRect, collides]
+  );
+
+  // Drop handler
   const handleCanvasDrop = useCallback(
     (e) => {
       const payload = e.dataTransfer.getData('application/x-module');
@@ -87,45 +114,37 @@ export default function Canvas({
       e.preventDefault();
 
       let data;
-      try {
-        data = JSON.parse(payload);
-      } catch {
-        return;
-      }
+      try { data = JSON.parse(payload); } catch { return; }
 
       const rect = canvasRef.current.getBoundingClientRect();
       const dropX = e.clientX - rect.left - AXIS_MARGIN;
       const dropY = e.clientY - rect.top;
 
-      const width = Math.max(10, Math.round(data.width ?? 60));
-      const height = Math.max(10, Math.round(data.height ?? 60));
+      const defaultW = Math.max(10, Math.round(data.width ?? 60));
+      const defaultH = Math.max(10, Math.round(data.height ?? 60));
 
-      const raw = {
-        id: crypto.randomUUID(),
-        title: data.title || 'Módulo',   // 👈 guardamos título
-        x: dropX,
-        y: pxH - dropY - height,
-        width,
-        height,
-        src: data.src || null,
-        color: data.color || 'transparent',
-      };
+      if (Array.isArray(data.sizes) && data.sizes.length > 0) {
+        if (data.sizes.length === 1) {
+          const s = data.sizes[0];
+          finalizeDrop(data, dropX, dropY, s.width, s.height);
+          return;
+        }
+        setSizePrompt({ dropX, dropY, data });
+        return;
+      }
 
-      const proposed = sanitizeRect(raw);
-      if (collides(proposed, null)) return;
-
-      setModules((p) => [...p, proposed]);
-      setSelectedId(proposed.id);
+      finalizeDrop(data, dropX, dropY, defaultW, defaultH);
     },
-    [pxH, sanitizeRect, collides]
+    [finalizeDrop]
   );
 
-  // Autoridad única para mover/redimensionar (desde Module)
+  // Mover (sin redimensionar)
   const handleUpdateModule = (id, partial) => {
     setModules((prev) =>
       prev.map((m) => {
         if (m.id !== id) return m;
-        let proposed = sanitizeRect({ ...m, ...partial });
+        const { width, height, ...rest } = partial || {};
+        let proposed = sanitizeRect({ ...m, ...rest });
         if (collides(proposed, id)) return m;
         return proposed;
       })
@@ -140,13 +159,13 @@ export default function Canvas({
 
   const handleEdit = (key, value) => {
     if (!selectedId) return;
+    if (key === 'width' || key === 'height') return; // bloqueado: medidas vienen del selector
     setModules((prev) =>
       prev.map((m) => {
         if (m.id !== selectedId) return m;
         let proposed = { ...m };
-        if (key === 'width' || key === 'height') proposed[key] = Math.max(10, Number(value) || 0);
-        else if (key === 'x' || key === 'y')     proposed[key] = Number(value) || 0;
-        else if (key === 'color')                proposed.color = value;
+        if (key === 'x' || key === 'y')     proposed[key] = Number(value) || 0;
+        else if (key === 'color')           proposed.color = value;
         proposed = sanitizeRect(proposed);
         return collides(proposed, m.id) ? m : proposed;
       })
@@ -167,7 +186,7 @@ export default function Canvas({
         onDrop={handleCanvasDrop}
         onClick={handleCanvasClick}
       >
-        {/* Fondo/Grilla */}
+        {/* Grilla */}
         <svg width={pxW + AXIS_MARGIN} height={pxH + BOTTOM_MARGIN} style={{ display: 'block' }}>
           <g transform={`translate(${AXIS_MARGIN}, 0)`}>
             <rect width={pxW} height={pxH} fill="#fff" stroke="#ccc" />
@@ -203,26 +222,19 @@ export default function Canvas({
           />
         ))}
 
-        {/* Panel de edición */}
+        {/* Editor: sólo color y coords X/Y */}
         {selectedId && selectedModule && (
           <div
             style={{
-              position: 'absolute',
-              top: 10,
-              right: 10,
-              zIndex: 10,
-              background: 'white',
-              padding: 10,
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              boxShadow: '0 2px 6px rgba(0,0,0,.1)',
+              position: 'absolute', top: 10, right: 10, zIndex: 10,
+              background: 'white', padding: 10, border: '1px solid #ccc',
+              borderRadius: 6, boxShadow: '0 2px 6px rgba(0,0,0,.1)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <button onClick={handleDelete}>Eliminar</button>
             </div>
-
             <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6 }}>
               <label>Color</label>
               <input
@@ -230,34 +242,55 @@ export default function Canvas({
                 value={selectedModule.color}
                 onChange={(e) => handleEdit('color', e.target.value)}
               />
-
-              <label>Ancho (px)</label>
-              <input
-                type="number"
-                value={selectedModule.width}
-                onChange={(e) => handleEdit('width', e.target.value)}
-              />
-
-              <label>Alto (px)</label>
-              <input
-                type="number"
-                value={selectedModule.height}
-                onChange={(e) => handleEdit('height', e.target.value)}
-              />
-
               <label>X (px)</label>
               <input
                 type="number"
                 value={selectedModule.x}
                 onChange={(e) => handleEdit('x', e.target.value)}
               />
-
               <label>Y (px)</label>
               <input
                 type="number"
                 value={selectedModule.y}
                 onChange={(e) => handleEdit('y', e.target.value)}
               />
+            </div>
+          </div>
+        )}
+
+        {/* Picker de medidas cuando hay varias */}
+        {sizePrompt && (
+          <div
+            style={{
+              position: 'absolute',
+              left: sizePrompt.dropX + AXIS_MARGIN,
+              top: sizePrompt.dropY + 6,
+              background: '#fff',
+              border: '1px solid #ddd',
+              borderRadius: 8,
+              padding: 8,
+              zIndex: 20,
+              boxShadow: '0 6px 18px rgba(0,0,0,.12)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>Elegí una medida</div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {sizePrompt.data.sizes.map((s, idx) => (
+                <button
+                  key={idx}
+                  className="btn ghost"
+                  onClick={() => {
+                    finalizeDrop(sizePrompt.data, sizePrompt.dropX, sizePrompt.dropY, s.width, s.height);
+                    setSizePrompt(null);
+                  }}
+                >
+                  {s.width} × {s.height} cm
+                  {typeof s.deltaPct === 'number' && s.deltaPct !== 0 ? ` (${s.deltaPct > 0 ? '+' : ''}${s.deltaPct}%)` : ''}
+                  {s.isStandard ? ' · Estándar' : ''}
+                </button>
+              ))}
+              <button className="btn" onClick={() => setSizePrompt(null)}>Cancelar</button>
             </div>
           </div>
         )}
