@@ -3,17 +3,14 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import './TopBar.css';
 
-
-
-
-export default function TopBar({ qualityName, onChangeQuality, onAdmin }) {
+export default function TopBar({ qualityName, onChangeQuality, onAdmin, onOpenAdminLogin }) {
   const { user, loginGoogle, logout } = useAuth();
 
   return (
     <header className="topbar">
       {/* Izquierda - marca */}
       <div className="topbar__brand">
-        <img src="/dk.png" width="100" height="55" alt="Logo Dekam"/>
+        <img src="/dk.png" width="100" height="55" alt="Logo Dekam" />
         <span className="topbar__brandName">Easy Kitchen Design</span>
       </div>
 
@@ -32,14 +29,16 @@ export default function TopBar({ qualityName, onChangeQuality, onAdmin }) {
 
       {/* Derecha - acciones */}
       <div className="topbar__actions">
-        {/* Botón configuración solo si hay usuario */}
+        <button className="btn outline" onClick={onOpenAdminLogin} title="Ingresar como administrador">
+          Acceso admin
+        </button>
+
         {user && (
           <button className="btn" onClick={onAdmin}>
             Configuración
           </button>
         )}
 
-        {/* Login / Logout */}
         {!user ? (
           <button className="btn primary" onClick={loginGoogle}>
             Iniciar sesión

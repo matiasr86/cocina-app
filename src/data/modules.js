@@ -31,6 +31,87 @@ const modules = [
     height: 90,
     src: "/assets/modules/bajo-mesada/bm1pd.jpeg"
   },
+  {
+    type: "2-drawer-cabinet",
+    title: "BM Cajonero",
+    subtitle: "2 Cajones",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 60,
+    height: 90,
+    src: "/assets/modules/bajo-mesada/2-drawer-cabinet.jpeg"
+  },
+  {
+    type: "3-drawer-cabinet",
+    title: "BM Cajonero",
+    subtitle: "3 Cajones Opc. 1",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 60,
+    height: 90,
+    src: "/assets/modules/bajo-mesada/3-drawer-cabinet.jpeg"
+  },
+  {
+    type: "3-drawer-cabinet2",
+    title: "BM Cajonero",
+    subtitle: "3 Cajones Opc. 2",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 60,
+    height: 90,
+    src: "/assets/modules/bajo-mesada/3-drawer-cabinet2.jpeg"
+  },
+  {
+    type: "spice-rack",
+    title: "BM Especiero Cajón",
+    subtitle: "20 x 90 cm",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 20,
+    height: 90,
+    src: "/assets/modules/bajo-mesada/spice-rack.jpeg"
+  },
+  {
+    type: "storekeeper",
+    title: "BM Bodeguero",
+    subtitle: "6 Vinos - 15 x 90 cm",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 15,
+    height: 90,
+    src: "/assets/modules/bajo-mesada/storekeeper.jpeg"
+  },
+  //Especiales
+  {
+    type: "colum1",
+    title: "ES Columna 1",
+    subtitle: "60 X 211 cm - 2 Cajones + Horno + Micro + Puerta Sup",
+    section: "ESP",
+    sectionLabel: "ESPECIALES",
+    width: 60,
+    height: 211,
+    src: "/assets/modules/especiales/colum1.jpeg"
+  },
+  {
+    type: "colum2",
+    title: "ES Columna 2",
+    subtitle: "60 X 211 cm - 1 Puerta + Horno + Puerta Sup",
+    section: "ESP",
+    sectionLabel: "ESPECIALES",
+    width: 60,
+    height: 211,
+    src: "/assets/modules/especiales/colum2.jpeg"
+  },
+  {
+    type: "colum3",
+    title: "ES Columna 3",
+    subtitle: "60 X 211 cm - 2 Cajones + Horno + 2 Puertas Sup",
+    section: "ESP",
+    sectionLabel: "ESPECIALES",
+    width: 60,
+    height: 211,
+    src: "/assets/modules/especiales/colum3.png"
+  },
   //Electro
   {
     type: "fridge-right",
@@ -64,7 +145,7 @@ const modules = [
   },
   {
     type: "microwave",
-    title: "Micro-ondas",
+    title: "Microondas",
     subtitle: "48 x 30 cm",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
