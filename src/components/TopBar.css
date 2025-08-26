@@ -1,0 +1,156 @@
+/* src/components/TopBar.css */
+
+:root{
+  --tb-bg:#ffffff;
+  --tb-border:#e9eef3;
+  --tb-shadow:0 6px 18px rgba(16,24,40,.06);
+  --tb-text:#0f172a;
+  --tb-muted:#64748b;
+
+  --btn-primary:#1f6feb;
+  --btn-primary-hover:#1a61d0;
+  --btn-danger:#ef4444;
+  --btn-ghost-border:#d7e0ea;
+
+  --quality-dot:#10b981;
+}
+
+/* ---------- Contenedor ---------- */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* izq - centro - der */
+  align-items: center;
+  gap: 16px;
+
+  padding: 10px 16px;
+  background: var(--tb-bg);
+  border-bottom: 1px solid var(--tb-border);
+  box-shadow: var(--tb-shadow);
+  color: var(--tb-text);
+}
+
+/* ---------- Marca (izquierda) ---------- */
+.topbar__brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.topbar__logo{
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  background: linear-gradient(135deg, #1f6feb, #22c55e);
+  flex:0 0 28px;
+}
+.topbar__brandName{
+  font-weight:700;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* ---------- Centro (badge + botón) ---------- */
+.topbar__center{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+.topbar__qualityBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#f8fafc;
+  border:1px solid var(--tb-border);
+  font-size:14px;
+}
+.topbar__qualityBadge .dot{
+  width:8px; height:8px; border-radius:999px;
+  background:var(--quality-dot);
+  box-shadow:0 0 0 2px rgba(16,185,129,.15);
+}
+.topbar__qualityBadge .label strong{ font-weight:700; }
+
+/* ---------- Acciones (derecha) ---------- */
+.topbar__actions{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+/* Usuario (avatar + botón) */
+.topbar__user{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+.topbar__avatar{
+  width:32px; height:32px;
+  border-radius:999px;
+  object-fit:cover;
+  border:1px solid var(--tb-border);
+  box-shadow:0 2px 6px rgba(16,24,40,.06);
+  background:#fff;
+}
+
+/* ---------- Botones ---------- */
+.btn{
+  appearance:none; border:none; outline:none; cursor:pointer;
+  padding:8px 12px; border-radius:10px;
+  font-weight:600; font-size:14px;
+  transition: transform .04s ease, background .15s ease, opacity .15s ease;
+  box-shadow:0 2px 6px rgba(16,24,40,.08);
+  background:#fff; color:var(--tb-text);
+  border:1px solid var(--tb-border);
+}
+.btn:hover{ background:#f8fafc; }
+.btn:active{ transform:translateY(1px); }
+
+.btn.primary{
+  background:var(--btn-primary);
+  color:#fff;
+  border-color:var(--btn-primary);
+}
+.btn.primary:hover{ background:var(--btn-primary-hover); }
+
+.btn.ghost{
+  background:transparent;
+  color:var(--tb-text);
+  border:1px solid var(--btn-ghost-border);
+  box-shadow:none;
+}
+.btn.ghost:hover{ background:#f8fafc; }
+
+.btn.danger{
+  background:var(--btn-danger);
+  color:#fff;
+  border-color:var(--btn-danger);
+}
+.btn.danger.outline{
+  background:transparent;
+  color:var(--btn-danger);
+  border:1px solid rgba(239,68,68,.6);
+}
+.btn.danger.outline:hover{
+  background:rgba(239,68,68,.06);
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 1024px){
+  .topbar{ grid-template-columns: 1fr auto auto; }
+  .topbar__center{ display:none; } /* oculta centro en pantallas medianas/pequeñas */
+}
+@media (max-width: 560px){
+  .topbar__brandName{ display:none; } /* deja sólo el logo */
+  .btn{ padding:8px 10px; }
+}

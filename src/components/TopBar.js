@@ -1,25 +1,65 @@
+// src/components/TopBar.js
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
+import './TopBar.css';
+
+
+
 
 export default function TopBar({ qualityName, onChangeQuality, onAdmin }) {
+  const { user, loginGoogle, logout } = useAuth();
+
   return (
     <header className="topbar">
-      <div className="topbar__brand">Diseñá tu cocina fácil en 2D</div>
+      {/* Izquierda - marca */}
+      <div className="topbar__brand">
+        <img src="/dk.png" width="100" height="55" alt="Logo Dekam"/>
+        <span className="topbar__brandName">Easy Kitchen Design</span>
+      </div>
 
-      <nav className="topbar__nav">
-        <button className="btn ghost">Archivo</button>
-        <button className="btn ghost">Editar</button>
-        <button className="btn ghost">Ver</button>
-        <button className="btn ghost">Ayuda</button>
-      </nav>
+      {/* Centro - calidad */}
+      <div className="topbar__center">
+        <div className="topbar__qualityBadge" title="Calidad seleccionada">
+          <span className="dot" />
+          <span className="label">
+            Calidad: <strong>{qualityName || '—'}</strong>
+          </span>
+        </div>
+        <button className="btn ghost" onClick={onChangeQuality}>
+          Cambiar calidad
+        </button>
+      </div>
 
+      {/* Derecha - acciones */}
       <div className="topbar__actions">
-        <button className="btn ghost" onClick={onAdmin}>Admin</button>
-        {qualityName && (
-          <button className="chip" onClick={onChangeQuality} title="Cambiar calidad">
-            Calidad: {qualityName}
+        {/* Botón configuración solo si hay usuario */}
+        {user && (
+          <button className="btn" onClick={onAdmin}>
+            Configuración
           </button>
         )}
-        <button className="btn primary">Log In</button>
+
+        {/* Login / Logout */}
+        {!user ? (
+          <button className="btn primary" onClick={loginGoogle}>
+            Iniciar sesión
+          </button>
+        ) : (
+          <div className="topbar__user">
+            <img
+              className="topbar__avatar"
+              src={
+                user.photoURL ||
+                'https://ui-avatars.com/api/?background=ddd&name=' +
+                  encodeURIComponent(user.displayName || 'U')
+              }
+              alt={user.displayName || user.email || 'Usuario'}
+            />
+            <button className="btn danger outline" onClick={logout}>
+              Cerrar sesión
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

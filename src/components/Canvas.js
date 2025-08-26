@@ -189,7 +189,7 @@ export default function Canvas({
         {/* Grilla */}
         <svg width={pxW + AXIS_MARGIN} height={pxH + BOTTOM_MARGIN} style={{ display: 'block' }}>
           <g transform={`translate(${AXIS_MARGIN}, 0)`}>
-            <rect width={pxW} height={pxH} fill="#fff" stroke="#ccc" />
+            <rect width={pxW} height={pxH} fill="#f5f5f5" stroke="#ccc" />
             {Array.from({ length: Math.floor(pxW / GRID_STEP) + 1 }, (_, i) => (
               <line key={`v${i}`} x1={i * GRID_STEP} y1={0} x2={i * GRID_STEP} y2={pxH} stroke="#eee" />
             ))}

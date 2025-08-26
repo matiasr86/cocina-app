@@ -1,27 +1,27 @@
+// src/components/AppLayout.js
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 import Canvas from './Canvas';
 import RightPanel from './RightPanel';
 import QualityPicker from './QualityPicker';
-
-import { ModulesProvider, useModules } from '../context/ModulesContext';
-import AdminLoginModal from './AdminLoginModal';
 import AdminPanel from './AdminPanel';
+import { ModulesProvider, useModules } from '../context/ModulesContext';
 import { QUALITIES } from '../data/qualities';
+
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import FirebaseAuthModal from './FirebaseAuthModal';
 
 import './AppLayout.css';
 
 const LS_KEY_LAYOUT  = 'kitchen.layout.v1';
 const LS_KEY_QUALITY = 'kitchen.quality.v1';
 
-// Genera las paredes según el tipo seleccionado
 const makeWallsByType = (type) => {
   if (type === 'L') {
     return [
-      { id: 'left',  name: 'Pared Izquierda', width: 4,   height: 3 },
-      { id: 'right', name: 'Pared Derecha',   width: 4,   height: 3 },
+      { id: 'left',  name: 'Pared Izquierda', width: 4, height: 3 },
+      { id: 'right', name: 'Pared Derecha',   width: 4, height: 3 },
     ];
   }
   if (type === 'C') {
@@ -31,32 +31,26 @@ const makeWallsByType = (type) => {
       { id: 'right', name: 'Pared Derecha',   width: 3.5, height: 3 },
     ];
   }
-  // Recta
   return [{ id: 'front', name: 'Pared Frontal', width: 4, height: 3 }];
 };
 
-/* ---------- Wrapper que provee el contexto ---------- */
 export default function AppLayout() {
   return (
-    <ModulesProvider>
-      <AppLayoutInner />
-    </ModulesProvider>
+    <AuthProvider>
+      <ModulesProvider>
+        <AppLayoutInner />
+      </ModulesProvider>
+    </AuthProvider>
   );
 }
 
-/* ---------- Componente interno que consume el contexto ---------- */
 function AppLayoutInner() {
-  const { modules: catalog } = useModules(); // catálogo (con visibilidad, sizes, prices)
+  const { modules: catalog } = useModules();
+  const { user, authReady } = useAuth();
 
-  /* -------------------- Calidad -------------------- */
-  const [quality, setQuality] = useState(null); // 'started' | 'premium' | 'deluxe'
-  useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY_QUALITY);
-    if (raw) setQuality(raw);
-  }, []);
-  useEffect(() => {
-    if (quality) localStorage.setItem(LS_KEY_QUALITY, quality);
-  }, [quality]);
+  const [quality, setQuality] = useState(null);
+  useEffect(() => { const raw = localStorage.getItem(LS_KEY_QUALITY); if (raw) setQuality(raw); }, []);
+  useEffect(() => { if (quality) localStorage.setItem(LS_KEY_QUALITY, quality); }, [quality]);
 
   const qualityName = useMemo(
     () => QUALITIES.find((q) => q.id === quality)?.name || '',
@@ -64,12 +58,10 @@ function AppLayoutInner() {
   );
   const priceKey = quality === 'deluxe' ? 'deluxe' : quality === 'premium' ? 'premium' : 'started';
 
-  /* -------------------- Paredes/Layout -------------------- */
   const [kitchenType, setKitchenType] = useState('Recta');
   const [wallsState, setWallsState] = useState(() => makeWallsByType('Recta'));
   const [activeWallId, setActiveWallId] = useState(() => makeWallsByType('Recta')[0].id);
 
-  // Hidratar desde localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_KEY_LAYOUT);
@@ -80,8 +72,6 @@ function AppLayoutInner() {
       if (parsed?.activeWallId) setActiveWallId(parsed.activeWallId);
     } catch {}
   }, []);
-
-  // Persistir layout
   useEffect(() => {
     const payload = { kitchenType, walls: wallsState, activeWallId };
     try { localStorage.setItem(LS_KEY_LAYOUT, JSON.stringify(payload)); } catch {}
@@ -98,67 +88,99 @@ function AppLayoutInner() {
     });
     setActiveWallId(next[0].id);
   };
-
   const updateActiveWall = (patch) => {
     setWallsState((prev) => prev.map((w) => (w.id === activeWallId ? { ...w, ...patch } : w)));
   };
-
   const activeWall = walls.find((w) => w.id === activeWallId) ?? walls[0];
 
-  /* -------------------- Resumen + Estimación -------------------- */
-  // summary: { [wallId]: { [title]: count } }
+  // Resumen/estimación
   const [summaries, setSummaries] = useState({});
-  // breakdown: { [wallId]: { items: [{type,title,count,unit,subtotal}], total } }
   const [breakdowns, setBreakdowns] = useState({});
+  // dentro de AppLayoutInner, reemplazá COMPLETO este useCallback
+const handleModulesChange = useCallback(
+  (wallId, mods) => {
+    // 1) Resumen simple por título (sin cambios)
+    const byTitle = mods.reduce((acc, m) => {
+      const t = (m.title && String(m.title).trim()) || 'Módulo';
+      acc[t] = (acc[t] || 0) + 1;
+      return acc;
+    }, {});
+    setSummaries((prev) => ({ ...prev, [wallId]: byTitle }));
 
-  const handleModulesChange = useCallback(
-    (wallId, mods) => {
-      // Resumen por título (para la lista simple)
-      const byTitle = mods.reduce((acc, m) => {
-        const t = (m.title && String(m.title).trim()) || 'Módulo';
-        acc[t] = (acc[t] || 0) + 1;
-        return acc;
-      }, {});
-      setSummaries((prev) => ({ ...prev, [wallId]: byTitle }));
+    // 2) Estimación aplicando delta % por instancia
+    const byTypeMeta = new Map(catalog.map((c) => [c.type, c]));
 
-      // Precios por tipo con ajuste por adjPct
-      const byTypeMap = new Map(catalog.map((c) => [c.type, c]));
-      // agrupamos por type para construir filas; el subtotal se calcula sumando cada módulo con su adjPct
-      const countsByType = mods.reduce((acc, m) => {
-        acc[m.type] = (acc[m.type] || 0) + 1;
-        return acc;
-      }, {});
-      const items = Object.entries(countsByType).map(([type, count]) => {
-        const meta = byTypeMap.get(type);
-        const title = meta?.name || meta?.title || type;
-        const baseUnit = meta?.prices?.[priceKey] ?? null;
+    // Agrupamos por type, pero sumamos el unitario por instancia (base * (1 + delta%))
+    const groups = new Map();
 
-        const subtotal = mods
-          .filter((m) => m.type === type)
-          .reduce((acc, m) => {
-            if (baseUnit == null) return acc;
-            const pct = typeof m.adjPct === 'number' ? m.adjPct : 0;
-            const unitFinal = Math.round((baseUnit * (1 + pct / 100)) * 100) / 100;
-            return acc + unitFinal;
-          }, 0);
+    const getDeltaPct = (meta, m) => {
+      // a) si el Canvas guardó priceDeltaPct lo usamos
+      if (typeof m.priceDeltaPct === 'number') return m.priceDeltaPct;
+      // b) si no, intentamos deducirlo por medida exacta desde el catálogo (Admin)
+      const sizes = Array.isArray(meta?.sizes) ? meta.sizes : [];
+      const found = sizes.find(
+        (s) => Number(s.width) === Number(m.width) && Number(s.height) === Number(m.height)
+      );
+      return typeof found?.deltaPct === 'number' ? found.deltaPct : 0;
+    };
 
-        return { type, title, count, unit: baseUnit, subtotal };
-      });
+    for (const m of mods) {
+      const meta = byTypeMeta.get(m.type);
+      if (!meta) continue;
 
-      const total = items.reduce((acc, it) => acc + (it.subtotal || 0), 0);
-      setBreakdowns((prev) => ({ ...prev, [wallId]: { items, total } }));
-    },
-    [catalog, priceKey]
-  );
+      const base = meta?.prices?.[priceKey];
+      if (typeof base !== 'number') continue; // sin precio para esta calidad
+
+      const deltaPct = getDeltaPct(meta, m);
+      const unitInstance = Math.round(base * (1 + deltaPct / 100) * 100) / 100;
+
+      const key = m.type;
+      const g = groups.get(key) || {
+        type: m.type,
+        title: meta?.title || m.type,
+        count: 0,
+        subtotal: 0,
+        units: new Set(), // para saber si todas las instancias tienen el mismo unitario
+      };
+
+      g.count += 1;
+      g.subtotal = Math.round((g.subtotal + unitInstance) * 100) / 100;
+      g.units.add(unitInstance.toFixed(2)); // normalizamos para comparar
+      groups.set(key, g);
+    }
+
+    const items = Array.from(groups.values()).map((g) => ({
+      type: g.type,
+      title: g.title,
+      count: g.count,
+      unit: g.units.size === 1 ? Number([...g.units][0]) : null, // si hay mezcla de medidas, dejamos null
+      subtotal: g.subtotal,
+    }));
+
+    const total = items.reduce((acc, it) => acc + (it.subtotal || 0), 0);
+    setBreakdowns((prev) => ({ ...prev, [wallId]: { items, total } }));
+  },
+  [catalog, priceKey]
+);
 
   const activeSummary = summaries[activeWallId] || {};
   const activeBreakdown = breakdowns[activeWallId] || { items: [], total: 0 };
 
-  /* -------------------- Admin -------------------- */
+  // Admin
   const [adminOpen, setAdminOpen] = useState(false);
-  const [adminLogged, setAdminLogged] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  /* -------------------- Render -------------------- */
+  const openAdmin = () => {
+    if (!authReady) return; // esperamos a que cargue firebase
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    setAdminOpen(true);
+  };
+
+  const closeAdmin = () => setAdminOpen(false);
+
   const showQualityPicker = !quality;
 
   return (
@@ -166,26 +188,18 @@ function AppLayoutInner() {
       <TopBar
         qualityName={qualityName}
         onChangeQuality={() => setQuality(null)}
-        onAdmin={() => setAdminOpen(true)}
+        onAdmin={openAdmin}   // ahora chequea sesión
       />
 
       <div className="app__main">
-        {/* Sidebar izquierda */}
-        <div className="app__left">
-          <Sidebar />
-        </div>
+        <div className="app__left"><Sidebar /></div>
 
-        {/* Centro */}
         <main className="app__center">
           <div className="workspace">
-            {/* Selector de tipo */}
             <div className="workspace__toolbar">
               <div className="field">
                 <label>Tipo de cocina</label>
-                <select
-                  value={kitchenType}
-                  onChange={(e) => onChangeKitchenType(e.target.value)}
-                >
+                <select value={kitchenType} onChange={(e) => onChangeKitchenType(e.target.value)}>
                   <option value="Recta">Recta</option>
                   <option value="L">En L</option>
                   <option value="C">En C</option>
@@ -193,7 +207,6 @@ function AppLayoutInner() {
               </div>
             </div>
 
-            {/* Pestañas de paredes */}
             <div className="walltabs">
               {walls.map((w) => (
                 <button
@@ -206,7 +219,6 @@ function AppLayoutInner() {
               ))}
             </div>
 
-            {/* Canvas (montamos todos, mostramos el activo) */}
             <div className="workspace__canvas">
               {walls.map((w) => (
                 <div key={w.id} style={{ display: w.id === activeWallId ? 'block' : 'none' }}>
@@ -221,60 +233,41 @@ function AppLayoutInner() {
               ))}
             </div>
 
-            {/* Controles de medidas de la pared activa */}
             <div className="wall-dimensions">
               <div className="field">
                 <label>Ancho de la pared (m)</label>
                 <input
-                  type="number"
-                  min="1"
-                  step="0.1"
+                  type="number" min="1" step="0.1"
                   value={activeWall?.width ?? 4}
-                  onChange={(e) =>
-                    updateActiveWall({ width: Math.max(1, parseFloat(e.target.value) || 1) })
-                  }
+                  onChange={(e) => updateActiveWall({ width: Math.max(1, parseFloat(e.target.value) || 1) })}
                 />
               </div>
               <div className="field">
                 <label>Alto de la pared (m)</label>
                 <input
-                  type="number"
-                  min="2"
-                  step="0.1"
+                  type="number" min="2" step="0.1"
                   value={activeWall?.height ?? 3}
-                  onChange={(e) =>
-                    updateActiveWall({ height: Math.max(2, parseFloat(e.target.value) || 2) })
-                  }
+                  onChange={(e) => updateActiveWall({ height: Math.max(2, parseFloat(e.target.value) || 2) })}
                 />
               </div>
             </div>
           </div>
         </main>
 
-        {/* Panel derecho */}
         <div className="app__right">
           <RightPanel summary={activeSummary} breakdown={activeBreakdown} />
         </div>
       </div>
 
-      {/* Paso 0: selección de calidad */}
       {showQualityPicker && (
-        <QualityPicker
-          defaultValue={quality || 'premium'}
-          onSelect={(q) => setQuality(q)}
-        />
+        <QualityPicker defaultValue={quality || 'premium'} onSelect={(q) => setQuality(q)} />
       )}
 
-      {/* Admin: login + panel */}
-      {adminOpen && !adminLogged && (
-        <AdminLoginModal
-          onClose={() => setAdminOpen(false)}
-          onSuccess={() => setAdminLogged(true)}
-        />
-      )}
-      {adminLogged && (
-        <AdminPanel onClose={() => { setAdminLogged(false); setAdminOpen(false); }} />
-      )}
+      {/* Modal de login si no hay sesión */}
+      {authModalOpen && <FirebaseAuthModal onClose={() => setAuthModalOpen(false)} />}
+
+      {/* Panel Admin sólo si hay sesión */}
+      {adminOpen && user && <AdminPanel onClose={closeAdmin} />}
     </div>
   );
 }
