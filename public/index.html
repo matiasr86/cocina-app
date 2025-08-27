@@ -1,43 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+
+    <meta name="theme-color" content="#ffffff" />
+
+    <title>Easy Kitchen Design | Diseña tu cocina en 2D con precio en tiempo real</title>
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Diseña tu cocina soñada en 2D de forma fácil. Arrastra módulos, cambia medidas y obtené la cotización en tiempo real por calidad (Started, Premium, Deluxe). Exportá tu diseño a PDF."
     />
+    <meta
+      name="keywords"
+      content="diseño de cocinas, cocina 2D, cotización cocina, muebles de cocina, planner cocina, presupuesto cocina online"
+    />
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+    <link rel="canonical" href="https://tudominio.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Easy Kitchen Design — Diseña tu cocina en 2D con cotización instantánea" />
+    <meta
+      property="og:description"
+      content="Arrastrá módulos, elegí medidas y calidad, y mirá el precio en vivo. Exportá tu plano y resumen en PDF."
+    />
+    <meta property="og:url" content="https://tudominio.com/" />
+    <meta property="og:site_name" content="Easy Kitchen Design" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Easy Kitchen Design — Diseña tu cocina en 2D" />
+    <meta
+      name="twitter:description"
+      content="Planificá tu cocina en 2D y obtené la cotización en tiempo real. Exportá tu diseño a PDF."
+    />
+    <meta name="twitter:image" content="%PUBLIC_URL%/og-cover.png" />
+
+    <!-- PWA / Icons -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
+    <!-- (Opcional) fuentes
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     -->
-    <title>React App</title>
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "Easy Kitchen Design",
+            "url": "https://tudominio.com/",
+            "logo": "https://tudominio.com/logo512.png",
+            "sameAs": [
+              "https://www.instagram.com/tu_cuenta",
+              "https://www.facebook.com/tu_cuenta"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "name": "Easy Kitchen Design",
+            "url": "https://tudominio.com/",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://tudominio.com/?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
+
+    <!-- (Opcional) Analytics
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXX');
+    </script>
+    -->
+
+    <!-- 👇 Estilos NEUTROS: no tocan tu UI -->
+    <style>
+      html, body { height: 100%; }
+      body { margin: 0; }
+      #root { min-height: 100%; }
+      noscript {
+        display: block;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem 1.25rem;
+        background: #fff7ed;
+        color: #7c2d12;
+        border: 1px solid #fdba74;
+        border-radius: 12px;
+        font-size: 0.95rem;
+      }
+    </style>
   </head>
+
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      Para usar Easy Kitchen Design necesitás tener <strong>JavaScript habilitado</strong>.
+      Aquí podés diseñar tu cocina en 2D, probar módulos y medidas y obtener precios en tiempo real.
+    </noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

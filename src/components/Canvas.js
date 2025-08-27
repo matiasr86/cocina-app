@@ -236,19 +236,14 @@ export default function Canvas({
               <button onClick={handleDelete}>Eliminar</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6 }}>
-              <label>Color</label>
-              <input
-                type="color"
-                value={selectedModule.color}
-                onChange={(e) => handleEdit('color', e.target.value)}
-              />
-              <label>X (px)</label>
+              
+              <label>X (Cm)</label>
               <input
                 type="number"
                 value={selectedModule.x}
                 onChange={(e) => handleEdit('x', e.target.value)}
               />
-              <label>Y (px)</label>
+              <label>Y (Cm)</label>
               <input
                 type="number"
                 value={selectedModule.y}

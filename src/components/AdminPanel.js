@@ -1,14 +1,15 @@
-import React, { useMemo, useState } from 'react';
+// src/components/AdminPanel.js
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { useModules } from '../context/ModulesContext';
 import './AdminPanel.css';
 
 /**
- * AdminPanel:
- * - Lista catálogo completo (catalogAdmin del contexto).
- * - Edita: name, visible, prices (started/premium/deluxe), sizes [{width,height,isStandard,deltaPct}]
- * - Asegura UNA sola medida estándar.
- * - Guarda por módulo (updateOverride(type, patch)).
- * - Reset global (resetOverrides).
+ * AdminPanel + Excel:
+ * - Exporta a Excel dos hojas:
+ *   - Modulos: type, name, visible, subtitle, price_started, price_premium, price_deluxe
+ *   - Medidas: type, width, height, isStandard, deltaPct
+ * - Importa desde Excel: actualiza overrides por 'type'.
  */
 
 function NumberInput({ value, onChange, step = 1, min, max, placeholder }) {
@@ -37,7 +38,8 @@ export default function AdminPanel({ onClose }) {
 
   const filtered = useMemo(() => {
     return catalogAdmin.filter((m) => {
-      const hay = `${m.type} ${m.name || ''} ${m.title || ''}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+      const hay = `${m.type} ${m.name || ''} ${m.title || ''}`.toLowerCase()
+        .normalize('NFD').replace(/\p{Diacritic}/gu, '');
       return nq === '' || hay.includes(nq);
     });
   }, [catalogAdmin, nq]);
@@ -54,6 +56,8 @@ export default function AdminPanel({ onClose }) {
     const patch = {
       name: draft.name ?? null,
       visible: !!draft.visible,
+      // si tu backend soporta 'subtitle', lo enviamos (es opcional)
+      ...(draft.subtitle !== undefined ? { subtitle: draft.subtitle } : {}),
       prices: {
         started: draft.prices?.started ?? null,
         premium: draft.prices?.premium ?? null,
@@ -75,17 +79,187 @@ export default function AdminPanel({ onClose }) {
     await resetOverrides();
   };
 
+  /* ----------------- Exportar a Excel ----------------- */
+  const exportExcel = () => {
+    // Hoja Modulos
+    const rowsMod = catalogAdmin.map((m) => ({
+      type: m.type,
+      name: m.name ?? m.title ?? '',
+      visible: m.visible !== false ? true : false,
+      subtitle: m.subtitle ?? '',
+      price_started: (m.prices?.started ?? '') === '' ? '' : Number(m.prices?.started || 0),
+      price_premium: (m.prices?.premium ?? '') === '' ? '' : Number(m.prices?.premium || 0),
+      price_deluxe:  (m.prices?.deluxe  ?? '') === '' ? '' : Number(m.prices?.deluxe  || 0),
+    }));
+    const wsMod = XLSX.utils.json_to_sheet(rowsMod);
+    XLSX.utils.sheet_add_aoa(wsMod, [['type','name','visible','subtitle','price_started','price_premium','price_deluxe']], { origin: 'A1' });
+
+    // Hoja Medidas
+    const rowsSizes = [];
+    catalogAdmin.forEach((m) => {
+      (m.sizes || []).forEach((s) => {
+        rowsSizes.push({
+          type: m.type,
+          width: Number(s.width) || 0,
+          height: Number(s.height) || 0,
+          isStandard: !!s.isStandard,
+          deltaPct: (s.deltaPct === 0 || s.deltaPct) ? Number(s.deltaPct) : 0,
+        });
+      });
+    });
+    const wsSizes = XLSX.utils.json_to_sheet(rowsSizes);
+    XLSX.utils.sheet_add_aoa(wsSizes, [['type','width','height','isStandard','deltaPct']], { origin: 'A1' });
+
+    // Workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, wsMod, 'Modulos');
+    XLSX.utils.book_append_sheet(wb, wsSizes, 'Medidas');
+
+    const filename = `catalogo_modulos_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  };
+
+  /* ----------------- Importar desde Excel ----------------- */
+  const fileRef = useRef(null);
+  const askImport = () => fileRef.current?.click();
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: 'array' });
+
+      const wsMod = wb.Sheets['Modulos'];
+      const wsSizes = wb.Sheets['Medidas'];
+
+      if (!wsMod || !wsSizes) {
+        alert('El Excel debe contener las hojas "Modulos" y "Medidas".');
+        return;
+      }
+
+      const mods = XLSX.utils.sheet_to_json(wsMod, { defval: '' });
+      const sizes = XLSX.utils.sheet_to_json(wsSizes, { defval: '' });
+
+      // Normalizo por type
+      const byType = new Map();
+
+      // 1) Modulos
+      for (const r of mods) {
+        const type = String(r.type || '').trim();
+        if (!type) continue;
+        const name = r.name === '' ? null : String(r.name);
+        const visible = (String(r.visible).toLowerCase() === 'true') || r.visible === true || r.visible === 1;
+        const subtitle = r.subtitle === '' ? null : String(r.subtitle);
+
+        const prices = {
+          started: r.price_started === '' ? null : Number(r.price_started),
+          premium: r.price_premium === '' ? null : Number(r.price_premium),
+          deluxe:  r.price_deluxe  === '' ? null : Number(r.price_deluxe),
+        };
+
+        byType.set(type, {
+          type,
+          name,
+          visible,
+          subtitle,
+          prices,
+          sizes: [],
+        });
+      }
+
+      // 2) Medidas
+      for (const r of sizes) {
+        const type = String(r.type || '').trim();
+        if (!type) continue;
+        const width = Number(r.width) || 0;
+        const height = Number(r.height) || 0;
+        const isStandard = (String(r.isStandard).toLowerCase() === 'true') || r.isStandard === true || r.isStandard === 1;
+        const deltaPct = (r.deltaPct === '' || r.deltaPct === null || r.deltaPct === undefined) ? 0 : Number(r.deltaPct);
+
+        if (!byType.has(type)) {
+          byType.set(type, {
+            type, name: null, visible: true, subtitle: null,
+            prices: { started: null, premium: null, deluxe: null },
+            sizes: []
+          });
+        }
+        byType.get(type).sizes.push({ width, height, isStandard, deltaPct });
+      }
+
+      // 3) Normalizar UNA estándar
+      for (const [, m] of byType) {
+        const list = Array.isArray(m.sizes) ? m.sizes : [];
+        if (list.length > 0) {
+          const idxStd = list.findIndex(s => s.isStandard);
+          if (idxStd === -1) list[0].isStandard = true;
+          if (idxStd !== -1) {
+            let first = true;
+            list.forEach((s) => {
+              if (s.isStandard) {
+                if (first) { first = false; s.isStandard = true; }
+                else s.isStandard = false;
+              }
+            });
+          }
+        }
+      }
+
+      // 4) Aplicar overrides
+      if (!window.confirm('Se actualizarán los módulos según el Excel. ¿Continuar?')) return;
+
+      let ok = 0, fail = 0;
+      for (const [type, m] of byType) {
+        const patch = {
+          name: m.name,
+          visible: !!m.visible,
+          prices: m.prices,
+          sizes: (m.sizes || []).map(s => ({
+            width: Number(s.width) || 0,
+            height: Number(s.height) || 0,
+            isStandard: !!s.isStandard,
+            deltaPct: (s.deltaPct === 0 || s.deltaPct) ? Number(s.deltaPct) : 0,
+          })),
+          ...(m.subtitle !== undefined ? { subtitle: m.subtitle } : {}),
+        };
+        try {
+          await updateOverride(type, patch);
+          ok++;
+        } catch (e1) {
+          console.error('updateOverride error', type, e1);
+          fail++;
+        }
+      }
+
+      alert(`Importación finalizada.\nCorrectos: ${ok}\nErrores: ${fail}`);
+    } catch (err) {
+      console.error('Import Excel error:', err);
+      alert('No se pudo importar el Excel. Ver consola para más detalles.');
+    }
+  };
+
   return (
     <div className="admin-modal">
       <div className="admin-modal__card">
         <div className="admin-modal__header">
           <h2>Panel de Administración</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
               placeholder="Buscar módulo..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
               style={{ padding: '6px 8px', minWidth: 220 }}
+            />
+            <button className="btn outline" onClick={exportExcel}>Exportar Excel</button>
+            <button className="btn" onClick={askImport}>Importar Excel</button>
+            <input
+              type="file"
+              ref={fileRef}
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              style={{ display: 'none' }}
+              onChange={handleImportFile}
             />
             <button className="btn danger" onClick={handleReset}>Reestablecer todo</button>
             <button className="btn" onClick={onClose}>Cerrar</button>
@@ -110,6 +284,7 @@ export default function AdminPanel({ onClose }) {
 function ModuleEditor({ base, onSave }) {
   const [draft, setDraft] = useState(() => ({
     name: base.name ?? base.title ?? base.type,
+    subtitle: base.subtitle ?? '',
     visible: base.visible !== false,
     prices: {
       started: base.prices?.started ?? '',
@@ -119,8 +294,26 @@ function ModuleEditor({ base, onSave }) {
     sizes: Array.isArray(base.sizes) ? base.sizes.map(s => ({ ...s })) : [],
   }));
 
+  // 🔄 Sincronizar el editor cuando cambie 'base' (por ejemplo tras importar Excel)
+  useEffect(() => {
+    setDraft({
+      name: base.name ?? base.title ?? base.type,
+      subtitle: base.subtitle ?? '',
+      visible: base.visible !== false,
+      prices: {
+        started: base.prices?.started ?? '',
+        premium: base.prices?.premium ?? '',
+        deluxe:  base.prices?.deluxe  ?? '',
+      },
+      sizes: Array.isArray(base.sizes) ? base.sizes.map(s => ({ ...s })) : [],
+    });
+  }, [base]);
+
   const setField = (key, val) => setDraft((d) => ({ ...d, [key]: val }));
-  const setPrice = (k, v) => setDraft((d) => ({ ...d, prices: { ...(d.prices || {}), [k]: v === '' ? '' : Number(v) } }));
+  const setPrice = (k, v) => setDraft((d) => ({
+    ...d,
+    prices: { ...(d.prices || {}), [k]: v === '' ? '' : Number(v) }
+  }));
 
   const addSize = () => {
     setDraft((d) => ({
@@ -133,7 +326,6 @@ function ModuleEditor({ base, onSave }) {
     setDraft((d) => {
       const next = [...(d.sizes || [])];
       next.splice(idx, 1);
-      // Si quitamos la estándar, marcamos la primera (si existe)
       if (!next.some(s => s.isStandard) && next.length > 0) next[0].isStandard = true;
       return { ...d, sizes: next };
     });
@@ -142,9 +334,8 @@ function ModuleEditor({ base, onSave }) {
   const setSize = (idx, patch) => {
     setDraft((d) => {
       const next = [...(d.sizes || [])];
-      const cur = { ...(next[idx] || {}) , ...patch };
+      const cur = { ...(next[idx] || {}), ...patch };
       next[idx] = cur;
-      // Forzar una sola estándar
       if (patch.isStandard) {
         next.forEach((s, i) => { s.isStandard = i === idx; });
       }
@@ -160,6 +351,7 @@ function ModuleEditor({ base, onSave }) {
         </div>
         <div className="meta">
           <div className="type">{base.type}</div>
+
           <div className="title">
             <label>Nombre visible</label>
             <input
@@ -169,7 +361,18 @@ function ModuleEditor({ base, onSave }) {
               placeholder={base.title || base.type}
             />
           </div>
-          <label className="chk">
+
+          <div className="title" style={{ marginTop: 6 }}>
+            <label>Subtítulo</label>
+            <input
+              type="text"
+              value={draft.subtitle}
+              onChange={(e) => setField('subtitle', e.target.value)}
+              placeholder={base.subtitle || ''}
+            />
+          </div>
+
+          <label className="chk" style={{ marginTop: 6 }}>
             <input
               type="checkbox"
               checked={!!draft.visible}

@@ -37,7 +37,7 @@ const modules = [
     subtitle: "2 Cajones",
     section: "BM",
     sectionLabel: "BAJO MESADA",
-    width: 60,
+    width: 120,
     height: 90,
     src: "/assets/modules/bajo-mesada/2-drawer-cabinet.jpeg"
   },
@@ -109,7 +109,7 @@ const modules = [
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
-    height: 211,
+    height: 213,
     src: "/assets/modules/especiales/colum3.png"
   },
   //Electro

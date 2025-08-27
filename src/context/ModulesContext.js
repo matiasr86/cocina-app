@@ -1,12 +1,19 @@
 // src/context/ModulesContext.js
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from 'react';
 import baseModules from '../data/modules';
 import { ModulesApi } from '../api/ModulesApi';
 
 const LS_OVERRIDES = 'admin.modules.overrides.v1';
 const ModulesContext = createContext(null);
 
-// cache local como fallback si la API falla
+// Fallback local si la API no responde
 function loadOverridesLocal() {
   try {
     const raw = localStorage.getItem(LS_OVERRIDES);
@@ -29,13 +36,17 @@ export function ModulesProvider({ children }) {
     let cancelled = false;
     (async () => {
       try {
+        if (process?.env?.REACT_APP_API_BASE_URL) {
+          // eslint-disable-next-line no-console
+          console.info('[Modules] API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
+        }
         const data = await ModulesApi.getOverrides(); // { byType }
         if (!cancelled) {
           setOverrides(data || { byType: {} });
           setReady(true);
         }
       } catch (e) {
-        console.error('getOverrides error:', e);
+        console.error('[Modules] getOverrides error:', e);
         setApiError(String(e?.message || e));
         if (!cancelled) {
           setOverrides(loadOverridesLocal());
@@ -46,7 +57,7 @@ export function ModulesProvider({ children }) {
     return () => { cancelled = true; };
   }, []);
 
-  // Guardar cache local (opcional, como fallback)
+  // Guardar cache local como fallback
   useEffect(() => {
     try { localStorage.setItem(LS_OVERRIDES, JSON.stringify(overrides)); } catch {}
   }, [overrides]);
@@ -60,15 +71,22 @@ export function ModulesProvider({ children }) {
         return {
           ...m,
           name: ov.name ?? m.name ?? m.title ?? m.type,
+          subtitle: ov.subtitle ?? m.subtitle ?? null,   // 👈 subtítulo
           visible: ov.visible ?? m.visible ?? true,
           sizes: Array.isArray(ov.sizes) ? ov.sizes : (Array.isArray(m.sizes) ? m.sizes : null),
           prices: ov.prices ?? m.prices ?? null,
+          // metadatos para UI
+          title: m.title,
+          src: m.src,
+          section: m.section,
+          sectionLabel: m.sectionLabel,
+          type: m.type,
         };
       })
       .filter((m) => m.visible !== false);
   }, [overrides]);
 
-  // Catálogo completo para Admin (incluye ocultos y módulos que están sólo en overrides)
+  // Catálogo completo para Admin
   const catalogAdmin = useMemo(() => {
     const byType = overrides.byType || {};
     const types = new Set([...baseModules.map((m) => m.type), ...Object.keys(byType)]);
@@ -78,6 +96,7 @@ export function ModulesProvider({ children }) {
       return {
         ...base,
         name: ov.name ?? base.name ?? base.title ?? type,
+        subtitle: ov.subtitle ?? base.subtitle ?? null,
         visible: ov.visible ?? base.visible ?? true,
         sizes: Array.isArray(ov.sizes) ? ov.sizes : (Array.isArray(base.sizes) ? base.sizes : []),
         prices: ov.prices ?? base.prices ?? {},
@@ -85,54 +104,75 @@ export function ModulesProvider({ children }) {
     });
   }, [overrides]);
 
-  // Mutadores que hablan con la API
-  const setAdminTokenValue = (token) => {
+  // Token admin (persistente)
+  const setAdminTokenValue = useCallback((token) => {
     setAdminToken(token || '');
     if (token) localStorage.setItem('admin.token', token);
     else localStorage.removeItem('admin.token');
-  };
+  }, []);
 
-  const updateOverride = async (type, patch) => {
-    try {
-      const data = await ModulesApi.setOverride(type, patch, adminToken);
-      if (data?.byType) setOverrides({ byType: data.byType });
-      else {
-        const ref = await ModulesApi.getOverrides();
-        setOverrides(ref || { byType: {} });
-      }
-    } catch (e) {
-      console.error('setOverride error:', e);
-      // Fallback optimista local
-      setOverrides((prev) => ({
-        byType: {
-          ...(prev.byType || {}),
-          [type]: { ...(prev.byType?.[type] || {}), ...patch },
+  // ---- Mutadores con referencia estable ----
+  const updateOverride = useCallback(
+    async (type, patch) => {
+      try {
+        const data = await ModulesApi.setOverride(type, patch, adminToken);
+        if (data?.byType) {
+          setOverrides({ byType: data.byType });
+        } else {
+          const ref = await ModulesApi.getOverrides();
+          setOverrides(ref || { byType: {} });
         }
-      }));
-    }
-  };
+      } catch (e) {
+        console.error('[Modules] setOverride error (fallback local):', e);
+        // Fallback optimista local
+        setOverrides((prev) => ({
+          byType: {
+            ...(prev.byType || {}),
+            [type]: { ...(prev.byType?.[type] || {}), ...patch },
+          }
+        }));
+      }
+    },
+    [adminToken] // 👈 sólo cambia si cambia el token
+  );
 
-  const resetOverrides = async () => {
-    try {
-      const data = await ModulesApi.resetOverrides(adminToken);
-      if (data?.byType) setOverrides({ byType: data.byType });
-      else setOverrides({ byType: {} });
-    } catch (e) {
-      console.error('resetOverrides error:', e);
-      setOverrides({ byType: {} });
-    }
-  };
+  const resetOverrides = useCallback(
+    async () => {
+      try {
+        const data = await ModulesApi.resetOverrides(adminToken);
+        // Asegurate de que ModulesApi.resetOverrides haga DELETE '/overrides'
+        if (data?.byType) setOverrides({ byType: data.byType });
+        else setOverrides({ byType: {} });
+      } catch (e) {
+        console.error('[Modules] resetOverrides error:', e);
+        setOverrides({ byType: {} });
+      }
+    },
+    [adminToken] // 👈 sólo cambia si cambia el token
+  );
 
+  // Value memoizado con referencias estables
   const value = useMemo(() => ({
-    ready, apiError,
-    modules,          // catálogo visible para el front/Sidebar
-    catalogAdmin,     // catálogo completo para el panel admin
-    overrides,        // crudo de la API
+    ready,
+    apiError,
+    modules,
+    catalogAdmin,
+    overrides,
     adminToken,
     setAdminToken: setAdminTokenValue,
     updateOverride,
     resetOverrides,
-  }), [ready, apiError, modules, catalogAdmin, overrides, adminToken]);
+  }), [
+    ready,
+    apiError,
+    modules,
+    catalogAdmin,
+    overrides,
+    adminToken,
+    setAdminTokenValue,
+    updateOverride,
+    resetOverrides,
+  ]);
 
   return <ModulesContext.Provider value={value}>{children}</ModulesContext.Provider>;
 }
