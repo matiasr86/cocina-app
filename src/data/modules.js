@@ -13,7 +13,7 @@ const modules = [
   },
   {
     type: "bm1pi",
-    title: "BM 1 Puerta",
+    title: "BM 1 Puerta Izq",
     subtitle: "1 Estante",
     section: "BM",
     sectionLabel: "BAJO MESADA",
@@ -23,7 +23,7 @@ const modules = [
   },
   {
     type: "bm1pd",
-    title: "BM 1 Puerta",
+    title: "BM 1 Puerta Der",
     subtitle: "1 Estante",
     section: "BM",
     sectionLabel: "BAJO MESADA",
@@ -31,6 +31,7 @@ const modules = [
     height: 90,
     src: "/assets/modules/bajo-mesada/bm1pd.jpeg"
   },
+  
   {
     type: "2-drawer-cabinet",
     title: "BM Cajonero",
@@ -62,6 +63,26 @@ const modules = [
     src: "/assets/modules/bajo-mesada/3-drawer-cabinet2.jpeg"
   },
   {
+    type: "BM-oven",
+    title: "BM Horno",
+    subtitle: "Horno Empotrado",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 60,
+    height: 90,
+    src: "/assets/modules/bajo-mesada/BM-oven.png"
+  },
+  {
+    type: "BM-trash-can",
+    title: "BM Residuos",
+    subtitle: "Cesto de residuos integrad0",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 40,
+    height: 90,
+    src: "/assets/modules/bajo-mesada/BM-trash-can.png"
+  },
+  {
     type: "spice-rack",
     title: "BM Especiero Cajón",
     subtitle: "20 x 90 cm",
@@ -81,10 +102,93 @@ const modules = [
     height: 90,
     src: "/assets/modules/bajo-mesada/storekeeper.jpeg"
   },
+  //Alacenas
+  {
+    type: "Ala35-2P-v",
+    title: "AL 2 Puertas",
+    subtitle: "2 Puertas + Estante. Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacenas/Ala35-2P-v.png"
+  },
+  {
+    type: "Ala35-1PD",
+    title: "AL 1 Puerta Der",
+    subtitle: "1 Puerta + Estante. Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 40,
+    height: 60,
+    src: "/assets/modules/alacenas/Ala35-1PD.png"
+  },
+  {
+    type: "Ala35-1PI",
+    title: "AL 1 Puerta Izq",
+    subtitle: "1 Puerta + Estante. Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 40,
+    height: 60,
+    src: "/assets/modules/alacenas/Ala35-1PI.png"
+  },
+  {
+    type: "AlaH35-2P",
+    title: "AL 2 Puertas",
+    subtitle: "2 Puertas Horizontal +1 Estante. Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacenas/AlaH35-2P.png"
+  },
+  
+  {
+    type: "AlaH35-1P",
+    title: "AL 1 Puerta",
+    subtitle: "1 Puerta Horizontal. Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 80,
+    height: 30,
+    src: "/assets/modules/alacenas/AlaH35-1P.png"
+  },
+  {
+    type: "Ala-extra",
+    title: "AL 1 Puerta",
+    subtitle: "1 Puerta + Extractor. Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacenas/Ala-extra.png"
+  },
+  {
+    type: "AlaH35-SP",
+    title: "AL Sin Puertas",
+    subtitle: "1 Estante. Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacenas/AlaH35-SP.png"
+  },
+  {
+    type: "AlaH35-SP2",
+    title: "AL Sin Puerta",
+    subtitle: "Prof. 35 cm",
+    section: "ALA",
+    sectionLabel: "ALACENA",
+    width: 80,
+    height: 30,
+    src: "/assets/modules/alacenas/AlaH35-SP2.png"
+  },
+  
   //Especiales
   {
     type: "colum1",
-    title: "ES Columna 1",
+    title: "AL Columna 1",
     subtitle: "60 X 211 cm - 2 Cajones + Horno + Micro + Puerta Sup",
     section: "ESP",
     sectionLabel: "ESPECIALES",
@@ -94,7 +198,7 @@ const modules = [
   },
   {
     type: "colum2",
-    title: "ES Columna 2",
+    title: "AL Columna 2",
     subtitle: "60 X 211 cm - 1 Puerta + Horno + Puerta Sup",
     section: "ESP",
     sectionLabel: "ESPECIALES",
@@ -104,7 +208,7 @@ const modules = [
   },
   {
     type: "colum3",
-    title: "ES Columna 3",
+    title: "AL Columna 3",
     subtitle: "60 X 211 cm - 2 Cajones + Horno + 2 Puertas Sup",
     section: "ESP",
     sectionLabel: "ESPECIALES",
