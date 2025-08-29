@@ -34,7 +34,7 @@ export default function TopBar({ qualityName, onChangeQuality, onAdmin, onOpenAd
         </button>
 
         {user && (
-          <button className="btn" onClick={onAdmin}>
+          <button className="btn primary" onClick={onAdmin}>
             Configuración
           </button>
         )}

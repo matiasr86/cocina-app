@@ -1,15 +1,14 @@
 // src/components/AdminPanel.js
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import { useModules } from '../context/ModulesContext';
 import './AdminPanel.css';
 
 /**
- * AdminPanel + Excel:
- * - Exporta a Excel dos hojas:
- *   - Modulos: type, name, visible, subtitle, price_started, price_premium, price_deluxe
- *   - Medidas: type, width, height, isStandard, deltaPct
- * - Importa desde Excel: actualiza overrides por 'type'.
+ * AdminPanel
+ * - Sin botones "Guardar" por módulo: se edita en vivo.
+ * - Al **Guardar y cerrar** el panel se guardan TODOS los cambios pendientes.
+ * - Al montar, después de Reset e Import, se recarga SIEMPRE desde la API (no cache).
  */
 
 function NumberInput({ value, onChange, step = 1, min, max, placeholder }) {
@@ -27,14 +26,87 @@ function NumberInput({ value, onChange, step = 1, min, max, placeholder }) {
   );
 }
 
+/* ---------- Helpers ---------- */
+function normalizeSizes(list) {
+  const sizes = Array.isArray(list) ? list.map(s => ({
+    width: Number(s?.width) || 0,
+    height: Number(s?.height) || 0,
+    isStandard: !!s?.isStandard,
+    deltaPct: (s?.deltaPct === 0 || s?.deltaPct) ? Number(s?.deltaPct) : 0,
+  })) : [];
+
+  const valid = sizes.filter(s => s.width > 0 && s.height > 0);
+  if (valid.length > 0) {
+    let idxStd = valid.findIndex(s => s.isStandard);
+    if (idxStd === -1) idxStd = 0;
+    valid.forEach((s, i) => { s.isStandard = i === idxStd; });
+  }
+  return valid;
+}
+
+function buildPatchFromDraft(draft) {
+  return {
+    name: draft.name ?? null,
+    visible: !!draft.visible,
+    ...(draft.subtitle !== undefined ? { subtitle: draft.subtitle } : {}),
+    prices: {
+      started: draft.prices?.started ?? null,
+      premium: draft.prices?.premium ?? null,
+      deluxe:  draft.prices?.deluxe  ?? null,
+    },
+    sizes: normalizeSizes(draft.sizes),
+  };
+}
+
+function shallowEqual(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function createDraftFromBase(base) {
+  return {
+    name: base.name ?? base.title ?? base.type,
+    subtitle: base.subtitle ?? '',
+    visible: base.visible !== false,
+    prices: {
+      started: base.prices?.started ?? '',
+      premium: base.prices?.premium ?? '',
+      deluxe:  base.prices?.deluxe  ?? '',
+    },
+    sizes: Array.isArray(base.sizes) ? base.sizes.map(s => ({ ...s })) : [],
+  };
+}
+
 export default function AdminPanel({ onClose }) {
-  const { catalogAdmin, updateOverride, resetOverrides } = useModules();
+  const {
+    catalogAdmin,
+    updateOverride,
+    resetOverrides,
+    reloadCatalog,
+    loading,
+  } = useModules();
 
   const [q, setQ] = useState('');
   const nq = useMemo(
     () => q.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, ''),
     [q]
   );
+
+  // Drafts por type (ediciones en el panel)
+  const [draftsByType, setDraftsByType] = useState({});
+
+  // Al abrir → trae SIEMPRE del server (sin fallback local)
+  useEffect(() => {
+    reloadCatalog({ force: true, noFallback: true });
+  }, [reloadCatalog]);
+
+  // Cuando cambia el catálogo (tras reload), reseteamos drafts
+  useEffect(() => {
+    const next = {};
+    for (const m of catalogAdmin) {
+      next[m.type] = createDraftFromBase(m);
+    }
+    setDraftsByType(next);
+  }, [catalogAdmin]);
 
   const filtered = useMemo(() => {
     return catalogAdmin.filter((m) => {
@@ -44,39 +116,30 @@ export default function AdminPanel({ onClose }) {
     });
   }, [catalogAdmin, nq]);
 
-  const handleSave = async (type, draft) => {
-    // normalizamos sizes: una sola estándar
-    const sizes = Array.isArray(draft.sizes) ? draft.sizes : [];
-    let stdIndex = sizes.findIndex((s) => s?.isStandard);
-    if (sizes.length > 0) {
-      if (stdIndex === -1) stdIndex = 0;
-      sizes.forEach((s, i) => { s.isStandard = i === stdIndex; });
+  // Guardado MASIVO al cerrar
+  const handleCloseAndSaveAll = useCallback(async () => {
+    try {
+      for (const m of catalogAdmin) {
+        const draft = draftsByType[m.type];
+        if (!draft) continue;
+
+        const patch = buildPatchFromDraft(draft);
+        const current = buildPatchFromDraft(createDraftFromBase(m));
+
+        if (!shallowEqual(current, patch)) {
+          await updateOverride(m.type, patch);
+        }
+      }
+      await reloadCatalog({ force: true, noFallback: true });
+    } finally {
+      onClose?.();
     }
-
-    const patch = {
-      name: draft.name ?? null,
-      visible: !!draft.visible,
-      // si tu backend soporta 'subtitle', lo enviamos (es opcional)
-      ...(draft.subtitle !== undefined ? { subtitle: draft.subtitle } : {}),
-      prices: {
-        started: draft.prices?.started ?? null,
-        premium: draft.prices?.premium ?? null,
-        deluxe:  draft.prices?.deluxe  ?? null,
-      },
-      sizes: sizes.map((s) => ({
-        width: Number(s.width) || 0,
-        height: Number(s.height) || 0,
-        isStandard: !!s.isStandard,
-        deltaPct: (s.deltaPct === 0 || s.deltaPct) ? Number(s.deltaPct) : 0,
-      })).filter((s) => s.width > 0 && s.height > 0),
-    };
-
-    await updateOverride(type, patch);
-  };
+  }, [catalogAdmin, draftsByType, updateOverride, reloadCatalog, onClose]);
 
   const handleReset = async () => {
     if (!window.confirm('¿Seguro que querés reestablecer todos los valores?')) return;
     await resetOverrides();
+    await reloadCatalog({ force: true, noFallback: true });
   };
 
   /* ----------------- Exportar a Excel ----------------- */
@@ -233,6 +296,7 @@ export default function AdminPanel({ onClose }) {
         }
       }
 
+      await reloadCatalog({ force: true, noFallback: true });
       alert(`Importación finalizada.\nCorrectos: ${ok}\nErrores: ${fail}`);
     } catch (err) {
       console.error('Import Excel error:', err);
@@ -245,6 +309,7 @@ export default function AdminPanel({ onClose }) {
       <div className="admin-modal__card">
         <div className="admin-modal__header">
           <h2>Panel de Administración</h2>
+          {loading && <span style={{ marginLeft: 8, fontSize: 12, opacity: .7 }}>Actualizando…</span>}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
               placeholder="Buscar módulo..."
@@ -262,7 +327,16 @@ export default function AdminPanel({ onClose }) {
               onChange={handleImportFile}
             />
             <button className="btn danger" onClick={handleReset}>Reestablecer todo</button>
-            <button className="btn" onClick={onClose}>Cerrar</button>
+
+            
+            <button
+              className="btn primary"
+              onClick={handleCloseAndSaveAll}
+              disabled={loading}
+              title="Guarda todos los cambios y cierra"
+            >
+              Guardar y cerrar
+            </button>
           </div>
         </div>
 
@@ -271,7 +345,10 @@ export default function AdminPanel({ onClose }) {
             <ModuleEditor
               key={m.type}
               base={m}
-              onSave={(draft) => handleSave(m.type, draft)}
+              initial={draftsByType[m.type] || createDraftFromBase(m)}
+              onDraftChange={(draft) => {
+                setDraftsByType(prev => ({ ...prev, [m.type]: draft }));
+              }}
             />
           ))}
         </div>
@@ -280,34 +357,19 @@ export default function AdminPanel({ onClose }) {
   );
 }
 
-/* ------------ Editor de un módulo ------------ */
-function ModuleEditor({ base, onSave }) {
-  const [draft, setDraft] = useState(() => ({
-    name: base.name ?? base.title ?? base.type,
-    subtitle: base.subtitle ?? '',
-    visible: base.visible !== false,
-    prices: {
-      started: base.prices?.started ?? '',
-      premium: base.prices?.premium ?? '',
-      deluxe:  base.prices?.deluxe  ?? '',
-    },
-    sizes: Array.isArray(base.sizes) ? base.sizes.map(s => ({ ...s })) : [],
-  }));
+/* ------------ Editor de un módulo (sin botón Guardar) ------------ */
+function ModuleEditor({ base, initial, onDraftChange }) {
+  const [draft, setDraft] = useState(() => initial);
 
-  // 🔄 Sincronizar el editor cuando cambie 'base' (por ejemplo tras importar Excel)
+  // Sincronizar el editor cuando cambie 'base' o 'initial'
   useEffect(() => {
-    setDraft({
-      name: base.name ?? base.title ?? base.type,
-      subtitle: base.subtitle ?? '',
-      visible: base.visible !== false,
-      prices: {
-        started: base.prices?.started ?? '',
-        premium: base.prices?.premium ?? '',
-        deluxe:  base.prices?.deluxe  ?? '',
-      },
-      sizes: Array.isArray(base.sizes) ? base.sizes.map(s => ({ ...s })) : [],
-    });
-  }, [base]);
+    setDraft(initial);
+  }, [initial, base]);
+
+  // Notificar al padre cada vez que cambia el draft
+  useEffect(() => {
+    onDraftChange?.(draft);
+  }, [draft, onDraftChange]);
 
   const setField = (key, val) => setDraft((d) => ({ ...d, [key]: val }));
   const setPrice = (k, v) => setDraft((d) => ({
@@ -425,10 +487,6 @@ function ModuleEditor({ base, onSave }) {
             <div className="sizes-empty">Sin medidas. Agregá al menos una.</div>
           )}
         </div>
-      </div>
-
-      <div className="admin-item__actions">
-        <button className="btn primary" onClick={() => onSave(draft)}>Guardar</button>
       </div>
     </div>
   );

@@ -3,16 +3,23 @@ const API_BASE_URL =
   (typeof process !== 'undefined' &&
     process.env &&
     process.env.REACT_APP_API_BASE_URL) ||
-  'http://localhost:5175/api';
+  'http://localhost:4000/api';
 
 async function http(method, path, body, token) {
   const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`; // 👈 ahora Bearer
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  // Evitar cache del navegador para GET y forzar frescura
+  let url = `${API_BASE_URL}${path}`;
+  if (method === 'GET') {
+    url += (path.includes('?') ? '&' : '?') + `_ts=${Date.now()}`;
+  }
+
+  const res = await fetch(url, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    cache: 'no-store',
   });
 
   if (!res.ok) {
@@ -23,13 +30,12 @@ async function http(method, path, body, token) {
 }
 
 export const ModulesApi = {
-  async getOverrides() {
-    return http('GET', '/overrides');
+  async getOverrides(adminToken) {
+    return http('GET', '/overrides', undefined, adminToken);
   },
   async setOverride(type, patch, adminToken) {
     return http('PUT', `/overrides/${encodeURIComponent(type)}`, patch, adminToken);
   },
-  // Tu backend expone DELETE /api/overrides (no /reset)
   async resetOverrides(adminToken) {
     return http('DELETE', '/overrides', {}, adminToken);
   },
