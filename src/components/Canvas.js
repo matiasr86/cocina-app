@@ -19,19 +19,21 @@ export default function Canvas({
 }) {
   const [modules, setModules] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [sizePrompt, setSizePrompt] = useState(null); // {dropX, dropY, data}
-  const [zoom, setZoom] = useState(1);                // 👈 ZOOM
+  const [sizePrompt, setSizePrompt] = useState(null);
+  const [zoom, setZoom] = useState(1);
   const canvasRef = useRef(null);
+
+  // 👇 NUEVO: picker para módulos lineales
+  const [linearPrompt, setLinearPrompt] = useState(null);
+  // { dropX, dropY, data, width, height, heights: [] }
 
   const pxW = initialWidth * 100;
   const pxH = initialHeight * 100;
 
-  // ---- helpers zoom ----
   const clampZoom = (z) => Math.max(0.5, Math.min(2, z));
   const incZoom = (delta) => setZoom((z) => clampZoom(+((z + delta).toFixed(2))));
   const resetZoom = () => setZoom(1);
 
-  // Cargar del storage por pared
   useEffect(() => {
     try {
       const raw = localStorage.getItem(modulesKey(wallId));
@@ -42,24 +44,22 @@ export default function Canvas({
     } catch {}
   }, [wallId]);
 
-  // Guardar
   useEffect(() => {
     try { localStorage.setItem(modulesKey(wallId), JSON.stringify(modules)); } catch {}
   }, [wallId, modules]);
 
-  // Avisar al parent (resumen / totales)
   useEffect(() => { onModulesChange?.(wallId, modules); }, [wallId, modules, onModulesChange]);
 
   const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
 
   const sanitizeRect = useCallback(
-    (rect) => ({
-      ...rect,
-      width: Math.max(10, rect.width),
-      height: Math.max(10, rect.height),
-      x: clamp(rect.x, 0, pxW - rect.width),
-      y: clamp(rect.y, 0, pxH - rect.height),
-    }),
+    (rect) => {
+      const width  = Math.max(10, Math.round(rect.width));
+      const height = Math.max(10, Math.round(rect.height));
+      const x = clamp(Math.round(rect.x), 0, pxW - width);
+      const y = clamp(Math.round(rect.y), 0, pxH - height);
+      return { ...rect, width, height, x, y };
+    },
     [pxW, pxH]
   );
 
@@ -84,7 +84,6 @@ export default function Canvas({
     if (hasPayload) e.preventDefault();
   }, []);
 
-  // Colocar módulo (setea adjPct a partir de deltaPct de la medida elegida)
   const finalizeDrop = useCallback(
     (data, dropX, dropY, width, height) => {
       let adjPct = 0;
@@ -100,7 +99,7 @@ export default function Canvas({
         y: pxH - dropY - height,
         width,
         height,
-        adjPct, // guardamos el ajuste en la instancia (no se muestra en UI)
+        adjPct,
         src: data.src || null,
         color: data.color || 'transparent',
       };
@@ -111,6 +110,25 @@ export default function Canvas({
     },
     [pxH, sanitizeRect, collides]
   );
+
+  // ======== NUEVO: helpers lineales ========
+  const isLinearModule = (data) => {
+    if (data?.isLinear) return true;                   // preferido (desde modules.js)
+    if (data?.section === 'ZO') return true;           // fallback por sección
+    const txt = (data?.type || data?.title || '').toString();
+    return /banquina|z[oó]calo/i.test(txt);            // último fallback por texto
+  };
+  const getLinearHeights = (data) => {
+    if (Array.isArray(data?.allowedHeights) && data.allowedHeights.length)
+      return data.allowedHeights.map(Number);
+    if (Array.isArray(data?.heights) && data.heights.length)
+      return data.heights.map(Number);
+    if (Array.isArray(data?.sizes) && data.sizes.length) {
+      const hs = data.sizes.map((s) => Number(s?.height) || 0).filter(Boolean);
+      return Array.from(new Set(hs));
+    }
+    return [10, 12, 15]; // por defecto
+  };
 
   // Drop handler (ajustado por zoom)
   const handleCanvasDrop = useCallback(
@@ -123,9 +141,22 @@ export default function Canvas({
       try { data = JSON.parse(payload); } catch { return; }
 
       const rect = canvasRef.current.getBoundingClientRect();
-      // 👇 Ajustamos por zoom: convertimos a coords "reales" antes de guardar
-      const dropX = (e.clientX - rect.left - AXIS_MARGIN) / zoom;
-      const dropY = (e.clientY - rect.top) / zoom;
+      const dropX = Math.round((e.clientX - rect.left - AXIS_MARGIN) / zoom);
+      const dropY = Math.round((e.clientY - rect.top) / zoom);
+
+      // 👉 módulos lineales: largo libre + alto entre opciones
+      if (isLinearModule(data)) {
+        const heights = getLinearHeights(data);
+        setLinearPrompt({
+          dropX,
+          dropY,
+          data,
+          width: Math.max(10, Math.round(data.defaultLinearWidth ?? data.width ?? 80)),
+          height: heights[0] || 10,
+          heights
+        });
+        return;
+      }
 
       const defaultW = Math.max(10, Math.round(data.width ?? 60));
       const defaultH = Math.max(10, Math.round(data.height ?? 60));
@@ -145,7 +176,6 @@ export default function Canvas({
     [finalizeDrop, zoom]
   );
 
-  // Mover (sin redimensionar)
   const handleUpdateModule = (id, partial) => {
     setModules((prev) =>
       prev.map((m) => {
@@ -181,16 +211,17 @@ export default function Canvas({
 
   const selectedModule = modules.find((m) => m.id === selectedId);
 
-  // Cerrar el picker con Escape
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape') setSizePrompt(null);
+      if (e.key === 'Escape') {
+        setSizePrompt(null);
+        setLinearPrompt(null);
+      }
     };
-    if (sizePrompt) window.addEventListener('keydown', onKey);
+    if (sizePrompt || linearPrompt) window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [sizePrompt]);
+  }, [sizePrompt, linearPrompt]);
 
-  // Zoom con Ctrl + rueda (opcional, suave y no invasivo)
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
@@ -204,48 +235,44 @@ export default function Canvas({
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
-  // Posicionamiento seguro del picker de medidas (no se sale del lienzo)
-  const menuW = 240;
-  const menuMaxH = 280;
+  const menuW = 260;
+  const menuMaxH = 300;
   const pickerPos = (() => {
-    if (!sizePrompt) return { left: 0, top: 0 };
-    const left = Math.min(sizePrompt.dropX + AXIS_MARGIN, pxW + AXIS_MARGIN - menuW - 10);
-    const top = Math.min(sizePrompt.dropY + 6, pxH - menuMaxH - 10);
+    const src = sizePrompt || linearPrompt;
+    if (!src) return { left: 0, top: 0 };
+    const left = Math.min(src.dropX + AXIS_MARGIN, pxW + AXIS_MARGIN - menuW - 10);
+    const top = Math.min(src.dropY + 6, pxH - menuMaxH - 10);
     return { left: Math.max(10, left), top: Math.max(10, top) };
   })();
 
-  // Panel de edición junto al módulo, para no taparlo
   const editorW = 230;
-  const editorH = 120;
+  const editorH = 170;
   const editorPos = (() => {
     if (!selectedModule) return { left: AXIS_MARGIN + pxW - editorW - 10, top: 10 };
-
-    // A la derecha del módulo
     let left = AXIS_MARGIN + selectedModule.x + selectedModule.width + 8;
-    // Si no entra, a la izquierda
     if (left + editorW > AXIS_MARGIN + pxW - 4) {
       left = AXIS_MARGIN + selectedModule.x - editorW - 8;
     }
     left = Math.max(10, Math.min(left, AXIS_MARGIN + pxW - editorW - 10));
-
     let top = selectedModule.y;
     if (top + editorH > pxH - 4) top = pxH - editorH - 10;
     top = Math.max(10, top);
-
     return { left, top };
   })();
 
-  // Capa que se escala: grilla + módulos. UI (editor/picker) queda afuera sin escalar
   const zoomLayerStyle = {
+    position: 'relative',
     transform: `scale(${zoom})`,
     transformOrigin: 'top left',
     width: pxW + AXIS_MARGIN,
     height: pxH + BOTTOM_MARGIN,
   };
 
+  const roInputStyle = { background: '#f6f7f9', color: '#555', cursor: 'not-allowed' };
+
   return (
     <div style={{ flex: 1 }}>
-      {/* Header con controles de zoom */}
+      {/* Header */}
       <div style={{ padding: 10, fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>{label}</span>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -259,19 +286,13 @@ export default function Canvas({
       <div
         className="canvas-surface"
         ref={canvasRef}
-        style={{
-          width: pxW + AXIS_MARGIN,
-          height: pxH + BOTTOM_MARGIN,
-          position: 'relative',
-          overflow: 'auto', // 👈 si hacés zoom in, podés scrollear y NO se corta nada
-        }}
+        style={{ width: pxW + AXIS_MARGIN, height: pxH + BOTTOM_MARGIN, position: 'relative', overflow: 'auto' }}
         onDragOver={handleCanvasDragOver}
         onDrop={handleCanvasDrop}
         onClick={handleCanvasClick}
       >
         {/* Capa escalada */}
         <div style={zoomLayerStyle}>
-          {/* Grilla */}
           <svg width={pxW + AXIS_MARGIN} height={pxH + BOTTOM_MARGIN} style={{ display: 'block' }}>
             <g transform={`translate(${AXIS_MARGIN}, 0)`}>
               <rect width={pxW} height={pxH} fill="#f5f5f5" stroke="#ccc" />
@@ -294,7 +315,6 @@ export default function Canvas({
             ))}
           </svg>
 
-          {/* Módulos */}
           {modules.map((mod) => (
             <Module
               key={mod.id}
@@ -308,7 +328,7 @@ export default function Canvas({
           ))}
         </div>
 
-        {/* Panel de edición (fuera del scale para que no tape y sea cómodo) */}
+        {/* Panel edición */}
         {selectedId && selectedModule && (
           <div
             style={{
@@ -329,31 +349,29 @@ export default function Canvas({
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <button onClick={handleDelete}>Eliminar</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6, marginBottom: 8 }}>
               <label>X (Cm)</label>
-              <input
-                type="number"
-                value={selectedModule.x}
-                onChange={(e) => handleEdit('x', e.target.value)}
-              />
+              <input type="number" value={selectedModule.x} onChange={(e) => handleEdit('x', e.target.value)} />
               <label>Y (Cm)</label>
-              <input
-                type="number"
-                value={selectedModule.y}
-                onChange={(e) => handleEdit('y', e.target.value)}
-              />
+              <input type="number" value={selectedModule.y} onChange={(e) => handleEdit('y', e.target.value)} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6 }}>
+              <label>Ancho (Cm)</label>
+              <input type="number" value={selectedModule.width} readOnly style={roInputStyle} />
+              <label>Alto (Cm)</label>
+              <input type="number" value={selectedModule.height} readOnly style={roInputStyle} />
             </div>
           </div>
         )}
 
-        {/* Picker de medidas (sin porcentajes, con scroll si hay muchas) */}
+        {/* Picker estándar (medidas cerradas) */}
         {sizePrompt && (
           <div
             style={{
               position: 'absolute',
               left: pickerPos.left,
               top: pickerPos.top,
-              width: menuW,
+              width: 260,
               background: '#fff',
               border: '1px solid #ddd',
               borderRadius: 8,
@@ -364,21 +382,86 @@ export default function Canvas({
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Elegí una medida</div>
-            <div style={{ display: 'grid', gap: 6, maxHeight: menuMaxH, overflowY: 'auto', paddingRight: 4 }}>
+            <div style={{ display: 'grid', gap: 6, maxHeight: 300, overflowY: 'auto', paddingRight: 4 }}>
               {sizePrompt.data.sizes.map((s, idx) => (
                 <button
                   key={idx}
                   className="btn ghost"
-                  onClick={() => {
-                    finalizeDrop(sizePrompt.data, sizePrompt.dropX, sizePrompt.dropY, s.width, s.height);
-                    setSizePrompt(null);
-                  }}
+                  onClick={() => { finalizeDrop(sizePrompt.data, sizePrompt.dropX, sizePrompt.dropY, s.width, s.height); setSizePrompt(null); }}
                   style={{ textAlign: 'left', whiteSpace: 'nowrap' }}
                 >
                   {s.width} × {s.height} cm{ s.isStandard ? ' · Estándar' : '' }
                 </button>
               ))}
               <button className="btn" onClick={() => setSizePrompt(null)}>Cancelar</button>
+            </div>
+          </div>
+        )}
+
+        {/* Picker lineal */}
+        {linearPrompt && (
+          <div
+            style={{
+              position: 'absolute',
+              left: pickerPos.left,
+              top: pickerPos.top,
+              width: 260,
+              background: '#fff',
+              border: '1px solid #ddd',
+              borderRadius: 8,
+              padding: 10,
+              zIndex: 21,
+              boxShadow: '0 6px 18px rgba(0,0,0,.12)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontWeight: 700, marginBottom: 8 }}>
+              {linearPrompt.data?.title || 'Módulo lineal'}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 100px', gap: 8, marginBottom: 10 }}>
+              <label>Largo (cm)</label>
+              <input
+                type="number"
+                min={10}
+                value={linearPrompt.width}
+                onChange={(e) =>
+                  setLinearPrompt((p) => ({ ...p, width: Math.max(10, Number(e.target.value) || 10) }))}
+              />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ marginBottom: 6, fontWeight: 600 }}>Alto</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {linearPrompt.heights.map((h) => (
+                  <button
+                    key={h}
+                    className={`btn ${linearPrompt.height === h ? 'primary' : 'ghost'}`}
+                    onClick={() => setLinearPrompt((p) => ({ ...p, height: h }))}
+                  >
+                    {h} cm
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button className="btn ghost" onClick={() => setLinearPrompt(null)}>Cancelar</button>
+              <button
+                className="btn primary"
+                onClick={() => {
+                  finalizeDrop(
+                    linearPrompt.data,
+                    linearPrompt.dropX,
+                    linearPrompt.dropY,
+                    Math.round(linearPrompt.width),
+                    Math.round(linearPrompt.height)
+                  );
+                  setLinearPrompt(null);
+                }}
+              >
+                Agregar
+              </button>
             </div>
           </div>
         )}

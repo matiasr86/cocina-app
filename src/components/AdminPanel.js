@@ -6,15 +6,16 @@ import './AdminPanel.css';
 
 /**
  * AdminPanel
- * - Sin botones "Guardar" por módulo: se edita en vivo.
- * - Al **Guardar y cerrar** el panel se guardan TODOS los cambios pendientes.
- * - Al montar, después de Reset e Import, se recarga SIEMPRE desde la API (no cache).
+ * - Edición en vivo (sin botón Guardar por módulo).
+ * - "Guardar y cerrar" persiste TODOS los cambios pendientes.
+ * - Al abrir/reset/import, recarga SIEMPRE desde la API (sin cache local).
  */
 
 function NumberInput({ value, onChange, step = 1, min, max, placeholder }) {
   return (
     <input
       type="number"
+      inputMode="numeric"
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
       step={step}
@@ -28,18 +29,22 @@ function NumberInput({ value, onChange, step = 1, min, max, placeholder }) {
 
 /* ---------- Helpers ---------- */
 function normalizeSizes(list) {
-  const sizes = Array.isArray(list) ? list.map(s => ({
-    width: Number(s?.width) || 0,
-    height: Number(s?.height) || 0,
-    isStandard: !!s?.isStandard,
-    deltaPct: (s?.deltaPct === 0 || s?.deltaPct) ? Number(s?.deltaPct) : 0,
-  })) : [];
+  const sizes = Array.isArray(list)
+    ? list.map((s) => ({
+        width: Number(s?.width) || 0,
+        height: Number(s?.height) || 0,
+        isStandard: !!s?.isStandard,
+        deltaPct: (s?.deltaPct === 0 || s?.deltaPct) ? Number(s?.deltaPct) : 0,
+      }))
+    : [];
 
-  const valid = sizes.filter(s => s.width > 0 && s.height > 0);
+  const valid = sizes.filter((s) => s.width > 0 && s.height > 0);
   if (valid.length > 0) {
-    let idxStd = valid.findIndex(s => s.isStandard);
+    let idxStd = valid.findIndex((s) => s.isStandard);
     if (idxStd === -1) idxStd = 0;
-    valid.forEach((s, i) => { s.isStandard = i === idxStd; });
+    valid.forEach((s, i) => {
+      s.isStandard = i === idxStd;
+    });
   }
   return valid;
 }
@@ -52,7 +57,7 @@ function buildPatchFromDraft(draft) {
     prices: {
       started: draft.prices?.started ?? null,
       premium: draft.prices?.premium ?? null,
-      deluxe:  draft.prices?.deluxe  ?? null,
+      deluxe: draft.prices?.deluxe ?? null,
     },
     sizes: normalizeSizes(draft.sizes),
   };
@@ -70,20 +75,14 @@ function createDraftFromBase(base) {
     prices: {
       started: base.prices?.started ?? '',
       premium: base.prices?.premium ?? '',
-      deluxe:  base.prices?.deluxe  ?? '',
+      deluxe: base.prices?.deluxe ?? '',
     },
-    sizes: Array.isArray(base.sizes) ? base.sizes.map(s => ({ ...s })) : [],
+    sizes: Array.isArray(base.sizes) ? base.sizes.map((s) => ({ ...s })) : [],
   };
 }
 
 export default function AdminPanel({ onClose }) {
-  const {
-    catalogAdmin,
-    updateOverride,
-    resetOverrides,
-    reloadCatalog,
-    loading,
-  } = useModules();
+  const { catalogAdmin, updateOverride, resetOverrides, reloadCatalog, loading } = useModules();
 
   const [q, setQ] = useState('');
   const nq = useMemo(
@@ -99,22 +98,30 @@ export default function AdminPanel({ onClose }) {
     reloadCatalog({ force: true, noFallback: true });
   }, [reloadCatalog]);
 
-  // Cuando cambia el catálogo (tras reload), reseteamos drafts
+  // Cuando cambia el catálogo (tras reload), inicializamos drafts
   useEffect(() => {
     const next = {};
-    for (const m of catalogAdmin) {
-      next[m.type] = createDraftFromBase(m);
-    }
+    for (const m of catalogAdmin) next[m.type] = createDraftFromBase(m);
     setDraftsByType(next);
   }, [catalogAdmin]);
 
   const filtered = useMemo(() => {
     return catalogAdmin.filter((m) => {
-      const hay = `${m.type} ${m.name || ''} ${m.title || ''}`.toLowerCase()
-        .normalize('NFD').replace(/\p{Diacritic}/gu, '');
+      const hay = `${m.type} ${m.name || ''} ${m.title || ''}`
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '');
       return nq === '' || hay.includes(nq);
     });
   }, [catalogAdmin, nq]);
+
+  // handler estable para recibir cambios de cada editor
+  const handleDraftChange = useCallback((type, draft) => {
+    setDraftsByType((prev) => {
+      if (prev[type] === draft) return prev; // misma referencia → no actualiza
+      return { ...prev, [type]: draft };
+    });
+  }, []);
 
   // Guardado MASIVO al cerrar
   const handleCloseAndSaveAll = useCallback(async () => {
@@ -150,12 +157,19 @@ export default function AdminPanel({ onClose }) {
       name: m.name ?? m.title ?? '',
       visible: m.visible !== false ? true : false,
       subtitle: m.subtitle ?? '',
-      price_started: (m.prices?.started ?? '') === '' ? '' : Number(m.prices?.started || 0),
-      price_premium: (m.prices?.premium ?? '') === '' ? '' : Number(m.prices?.premium || 0),
-      price_deluxe:  (m.prices?.deluxe  ?? '') === '' ? '' : Number(m.prices?.deluxe  || 0),
+      price_started:
+        (m.prices?.started ?? '') === '' ? '' : Number(m.prices?.started || 0),
+      price_premium:
+        (m.prices?.premium ?? '') === '' ? '' : Number(m.prices?.premium || 0),
+      price_deluxe:
+        (m.prices?.deluxe ?? '') === '' ? '' : Number(m.prices?.deluxe || 0),
     }));
     const wsMod = XLSX.utils.json_to_sheet(rowsMod);
-    XLSX.utils.sheet_add_aoa(wsMod, [['type','name','visible','subtitle','price_started','price_premium','price_deluxe']], { origin: 'A1' });
+    XLSX.utils.sheet_add_aoa(
+      wsMod,
+      [['type', 'name', 'visible', 'subtitle', 'price_started', 'price_premium', 'price_deluxe']],
+      { origin: 'A1' }
+    );
 
     // Hoja Medidas
     const rowsSizes = [];
@@ -171,14 +185,16 @@ export default function AdminPanel({ onClose }) {
       });
     });
     const wsSizes = XLSX.utils.json_to_sheet(rowsSizes);
-    XLSX.utils.sheet_add_aoa(wsSizes, [['type','width','height','isStandard','deltaPct']], { origin: 'A1' });
+    XLSX.utils.sheet_add_aoa(wsSizes, [['type', 'width', 'height', 'isStandard', 'deltaPct']], {
+      origin: 'A1',
+    });
 
     // Workbook
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, wsMod, 'Modulos');
     XLSX.utils.book_append_sheet(wb, wsSizes, 'Medidas');
 
-    const filename = `catalogo_modulos_${new Date().toISOString().slice(0,10)}.xlsx`;
+    const filename = `catalogo_modulos_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, filename);
   };
 
@@ -214,13 +230,14 @@ export default function AdminPanel({ onClose }) {
         const type = String(r.type || '').trim();
         if (!type) continue;
         const name = r.name === '' ? null : String(r.name);
-        const visible = (String(r.visible).toLowerCase() === 'true') || r.visible === true || r.visible === 1;
+        const visible =
+          String(r.visible).toLowerCase() === 'true' || r.visible === true || r.visible === 1;
         const subtitle = r.subtitle === '' ? null : String(r.subtitle);
 
         const prices = {
           started: r.price_started === '' ? null : Number(r.price_started),
           premium: r.price_premium === '' ? null : Number(r.price_premium),
-          deluxe:  r.price_deluxe  === '' ? null : Number(r.price_deluxe),
+          deluxe: r.price_deluxe === '' ? null : Number(r.price_deluxe),
         };
 
         byType.set(type, {
@@ -239,14 +256,23 @@ export default function AdminPanel({ onClose }) {
         if (!type) continue;
         const width = Number(r.width) || 0;
         const height = Number(r.height) || 0;
-        const isStandard = (String(r.isStandard).toLowerCase() === 'true') || r.isStandard === true || r.isStandard === 1;
-        const deltaPct = (r.deltaPct === '' || r.deltaPct === null || r.deltaPct === undefined) ? 0 : Number(r.deltaPct);
+        const isStandard =
+          String(r.isStandard).toLowerCase() === 'true' ||
+          r.isStandard === true ||
+          r.isStandard === 1;
+        const deltaPct =
+          r.deltaPct === '' || r.deltaPct === null || r.deltaPct === undefined
+            ? 0
+            : Number(r.deltaPct);
 
         if (!byType.has(type)) {
           byType.set(type, {
-            type, name: null, visible: true, subtitle: null,
+            type,
+            name: null,
+            visible: true,
+            subtitle: null,
             prices: { started: null, premium: null, deluxe: null },
-            sizes: []
+            sizes: [],
           });
         }
         byType.get(type).sizes.push({ width, height, isStandard, deltaPct });
@@ -256,14 +282,16 @@ export default function AdminPanel({ onClose }) {
       for (const [, m] of byType) {
         const list = Array.isArray(m.sizes) ? m.sizes : [];
         if (list.length > 0) {
-          const idxStd = list.findIndex(s => s.isStandard);
+          const idxStd = list.findIndex((s) => s.isStandard);
           if (idxStd === -1) list[0].isStandard = true;
           if (idxStd !== -1) {
             let first = true;
             list.forEach((s) => {
               if (s.isStandard) {
-                if (first) { first = false; s.isStandard = true; }
-                else s.isStandard = false;
+                if (first) {
+                  first = false;
+                  s.isStandard = true;
+                } else s.isStandard = false;
               }
             });
           }
@@ -273,13 +301,14 @@ export default function AdminPanel({ onClose }) {
       // 4) Aplicar overrides
       if (!window.confirm('Se actualizarán los módulos según el Excel. ¿Continuar?')) return;
 
-      let ok = 0, fail = 0;
+      let ok = 0,
+        fail = 0;
       for (const [type, m] of byType) {
         const patch = {
           name: m.name,
           visible: !!m.visible,
           prices: m.prices,
-          sizes: (m.sizes || []).map(s => ({
+          sizes: (m.sizes || []).map((s) => ({
             width: Number(s.width) || 0,
             height: Number(s.height) || 0,
             isStandard: !!s.isStandard,
@@ -309,7 +338,9 @@ export default function AdminPanel({ onClose }) {
       <div className="admin-modal__card">
         <div className="admin-modal__header">
           <h2>Panel de Administración</h2>
-          {loading && <span style={{ marginLeft: 8, fontSize: 12, opacity: .7 }}>Actualizando…</span>}
+          {loading && (
+            <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.7 }}>Actualizando…</span>
+          )}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
               placeholder="Buscar módulo..."
@@ -317,8 +348,12 @@ export default function AdminPanel({ onClose }) {
               onChange={(e) => setQ(e.target.value)}
               style={{ padding: '6px 8px', minWidth: 220 }}
             />
-            <button className="btn outline" onClick={exportExcel}>Exportar Excel</button>
-            <button className="btn" onClick={askImport}>Importar Excel</button>
+            <button type="button" className="btn outline" onClick={exportExcel}>
+              Exportar Excel
+            </button>
+            <button type="button" className="btn" onClick={askImport}>
+              Importar Excel
+            </button>
             <input
               type="file"
               ref={fileRef}
@@ -326,17 +361,22 @@ export default function AdminPanel({ onClose }) {
               style={{ display: 'none' }}
               onChange={handleImportFile}
             />
-            <button className="btn danger" onClick={handleReset}>Reestablecer todo</button>
-
-            
-            <button
-              className="btn primary"
-              onClick={handleCloseAndSaveAll}
-              disabled={loading}
-              title="Guarda todos los cambios y cierra"
-            >
-              Guardar y cerrar
+            <button type="button" className="btn danger" onClick={handleReset}>
+              Reestablecer todo
             </button>
+
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                type="button"
+                className="btn primary"
+                onClick={handleCloseAndSaveAll}
+                disabled={loading}
+                title="Guarda todos los cambios y cierra"
+              >
+                Guardar y cerrar
+              </button>
+              
+            </div>
           </div>
         </div>
 
@@ -345,10 +385,8 @@ export default function AdminPanel({ onClose }) {
             <ModuleEditor
               key={m.type}
               base={m}
-              initial={draftsByType[m.type] || createDraftFromBase(m)}
-              onDraftChange={(draft) => {
-                setDraftsByType(prev => ({ ...prev, [m.type]: draft }));
-              }}
+              initial={draftsByType[m.type] || null}
+              onDraftChange={(draft) => handleDraftChange(m.type, draft)}
             />
           ))}
         </div>
@@ -357,59 +395,81 @@ export default function AdminPanel({ onClose }) {
   );
 }
 
-/* ------------ Editor de un módulo (sin botón Guardar) ------------ */
+/* ------------ Editor de un módulo ------------ */
 function ModuleEditor({ base, initial, onDraftChange }) {
-  const [draft, setDraft] = useState(() => initial);
+  // Draft local: si no hay initial todavía, partimos de base
+  const [draft, setDraft] = useState(() => initial ?? createDraftFromBase(base));
 
-  // Sincronizar el editor cuando cambie 'base' o 'initial'
+  // Sincronizar el editor cuando cambie `initial` (p.ej., tras recargar del server)
   useEffect(() => {
-    setDraft(initial);
+    const next = initial ?? createDraftFromBase(base);
+    // Evita setState si no cambió realmente (previene loops)
+    if (JSON.stringify(next) !== JSON.stringify(draft)) {
+      setDraft(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, base]);
 
-  // Notificar al padre cada vez que cambia el draft
-  useEffect(() => {
-    onDraftChange?.(draft);
-  }, [draft, onDraftChange]);
+  // Helpers de edición: actualizan local y notifican al padre SOLO en cambios del usuario
+  const emit = useCallback(
+    (next) => {
+      setDraft(next);
+      onDraftChange?.(next);
+    },
+    [onDraftChange]
+  );
 
-  const setField = (key, val) => setDraft((d) => ({ ...d, [key]: val }));
-  const setPrice = (k, v) => setDraft((d) => ({
-    ...d,
-    prices: { ...(d.prices || {}), [k]: v === '' ? '' : Number(v) }
-  }));
+  const setField = (key, val) =>
+    emit({
+      ...draft,
+      [key]: val,
+    });
+
+  const setPrice = (k, v) =>
+    emit({
+      ...draft,
+      prices: { ...(draft.prices || {}), [k]: v === '' ? '' : Number(v) },
+    });
 
   const addSize = () => {
-    setDraft((d) => ({
-      ...d,
-      sizes: [...(d.sizes || []), { width: 60, height: 70, isStandard: d.sizes?.length ? false : true, deltaPct: 0 }],
-    }));
+    const firstStd = !(draft.sizes && draft.sizes.length);
+    emit({
+      ...draft,
+      sizes: [
+        ...(draft.sizes || []),
+        { width: 60, height: 70, isStandard: firstStd, deltaPct: 0 },
+      ],
+    });
   };
 
   const removeSize = (idx) => {
-    setDraft((d) => {
-      const next = [...(d.sizes || [])];
-      next.splice(idx, 1);
-      if (!next.some(s => s.isStandard) && next.length > 0) next[0].isStandard = true;
-      return { ...d, sizes: next };
-    });
+    const next = [...(draft.sizes || [])];
+    next.splice(idx, 1);
+    if (!next.some((s) => s.isStandard) && next.length > 0) next[0].isStandard = true;
+    emit({ ...draft, sizes: next });
   };
 
   const setSize = (idx, patch) => {
-    setDraft((d) => {
-      const next = [...(d.sizes || [])];
-      const cur = { ...(next[idx] || {}), ...patch };
-      next[idx] = cur;
-      if (patch.isStandard) {
-        next.forEach((s, i) => { s.isStandard = i === idx; });
-      }
-      return { ...d, sizes: next };
-    });
+    const next = [...(draft.sizes || [])];
+    const cur = { ...(next[idx] || {}), ...patch };
+    next[idx] = cur;
+    if (patch.isStandard) {
+      next.forEach((s, i) => {
+        s.isStandard = i === idx;
+      });
+    }
+    emit({ ...draft, sizes: next });
   };
 
   return (
     <div className="admin-item">
       <div className="admin-item__left">
         <div className="thumb">
-          {base.src ? <img src={base.src} alt={base.type} /> : <div className="thumb__ph">Sin imagen</div>}
+          {base.src ? (
+            <img src={base.src} alt={base.type} />
+          ) : (
+            <div className="thumb__ph">Sin imagen</div>
+          )}
         </div>
         <div className="meta">
           <div className="type">{base.type}</div>
@@ -448,29 +508,63 @@ function ModuleEditor({ base, initial, onDraftChange }) {
       <div className="admin-item__prices">
         <div className="prices-row">
           <span>Started</span>
-          <NumberInput value={draft.prices.started} onChange={(v) => setPrice('started', v)} step={1} min={0} />
+          <NumberInput
+            value={draft.prices.started}
+            onChange={(v) => setPrice('started', v)}
+            step={1}
+            min={0}
+          />
         </div>
         <div className="prices-row">
           <span>Premium</span>
-          <NumberInput value={draft.prices.premium} onChange={(v) => setPrice('premium', v)} step={1} min={0} />
+          <NumberInput
+            value={draft.prices.premium}
+            onChange={(v) => setPrice('premium', v)}
+            step={1}
+            min={0}
+          />
         </div>
         <div className="prices-row">
           <span>Deluxe</span>
-          <NumberInput value={draft.prices.deluxe} onChange={(v) => setPrice('deluxe', v)} step={1} min={0} />
+          <NumberInput
+            value={draft.prices.deluxe}
+            onChange={(v) => setPrice('deluxe', v)}
+            step={1}
+            min={0}
+          />
         </div>
       </div>
 
       <div className="admin-item__sizes">
         <div className="sizes-header">
           <strong>Medidas</strong>
-          <button className="btn ghost" onClick={addSize}>+ Agregar</button>
+          <button type="button" className="btn ghost" onClick={addSize}>
+            + Agregar
+          </button>
         </div>
         <div className="sizes-list">
           {(draft.sizes || []).map((s, idx) => (
             <div key={idx} className={`size-row ${s.isStandard ? 'is-std' : ''}`}>
-              <NumberInput value={s.width}  onChange={(v) => setSize(idx, { width: v })}  step={1} min={1} placeholder="Ancho (cm)" />
-              <NumberInput value={s.height} onChange={(v) => setSize(idx, { height: v })} step={1} min={1} placeholder="Alto (cm)" />
-              <NumberInput value={s.deltaPct} onChange={(v) => setSize(idx, { deltaPct: v })} step={1} placeholder="% ajuste" />
+              <NumberInput
+                value={s.width}
+                onChange={(v) => setSize(idx, { width: v })}
+                step={1}
+                min={1}
+                placeholder="Ancho (cm)"
+              />
+              <NumberInput
+                value={s.height}
+                onChange={(v) => setSize(idx, { height: v })}
+                step={1}
+                min={1}
+                placeholder="Alto (cm)"
+              />
+              <NumberInput
+                value={s.deltaPct}
+                onChange={(v) => setSize(idx, { deltaPct: v })}
+                step={1}
+                placeholder="% ajuste"
+              />
               <label className="chk">
                 <input
                   type="radio"
@@ -480,7 +574,9 @@ function ModuleEditor({ base, initial, onDraftChange }) {
                 />
                 Estándar
               </label>
-              <button className="btn danger" onClick={() => removeSize(idx)}>Eliminar</button>
+              <button type="button" className="btn danger" onClick={() => removeSize(idx)}>
+                Eliminar
+              </button>
             </div>
           ))}
           {(draft.sizes || []).length === 0 && (

@@ -1,5 +1,35 @@
 
 const modules = [
+  //Zocalos
+  {
+    type: "BANQUINA-800-150",
+    title: "Banquina",
+    subtitle: "10 / 12 / 15 cm",
+    section: "ZO",
+    sectionLabel: "BANQUINA ESTABLECIDA",
+    width: 80,
+    height: 15,
+    src: "/assets/modules/zocalo/BANQUINA-800-150.png",
+     // 👇 NUEVO
+    isLinear: true,                 // el Canvas sabrá que el largo es libre
+    allowedHeights: [10, 12, 15],   // las 3 alturas válidas
+    defaultLinearWidth: 80          // sugerencia inicial (podés cambiarla)
+  },
+  {
+    type: "ZOCALO-800-150",
+    title: "Zocalo",
+    subtitle: "10 / 12 / 15 cm",
+    section: "ZO",
+    sectionLabel: "ZOCALO ALUMINIO",
+    width: 80,
+    height: 15,
+    src: "/assets/modules/zocalo/ZOCALO-800-150.png",
+     // 👇 NUEVO
+    isLinear: true,                 // el Canvas sabrá que el largo es libre
+    allowedHeights: [10, 12, 15],   // las 3 alturas válidas
+    defaultLinearWidth: 80          // sugerencia inicial (podés cambiarla)
+  },
+
   //Bajo Mesadas
     {
     type: "bm2p",

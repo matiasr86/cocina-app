@@ -145,6 +145,8 @@
   background:rgba(239,68,68,.06);
 }
 
+
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 1024px){
   .topbar{ grid-template-columns: 1fr auto auto; }
@@ -154,3 +156,4 @@
   .topbar__brandName{ display:none; } /* deja sólo el logo */
   .btn{ padding:8px 10px; }
 }
+

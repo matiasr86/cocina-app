@@ -6,6 +6,19 @@ import './TopBar.css';
 export default function TopBar({ qualityName, onChangeQuality, onAdmin, onOpenAdminLogin }) {
   const { user, loginGoogle, logout } = useAuth();
 
+  const handleNewProject = () => {
+    if (!window.confirm('Esto borrará tu proyecto guardado en este navegador y reiniciará la app. ¿Continuar?')) {
+      return;
+    }
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('kitchen.')) localStorage.removeItem(k);
+      }
+    } catch {}
+    window.location.reload();
+  };
+
   return (
     <header className="topbar">
       {/* Izquierda - marca */}
@@ -14,8 +27,13 @@ export default function TopBar({ qualityName, onChangeQuality, onAdmin, onOpenAd
         <span className="topbar__brandName">Easy Kitchen Design</span>
       </div>
 
-      {/* Centro - calidad */}
+      {/* Centro - nuevo proyecto + calidad */}
       <div className="topbar__center">
+        {/* 👉 Movido acá para que no quede tan a la izquierda */}
+        <button className="btn outline" onClick={handleNewProject} title="Borra el proyecto y reinicia">
+          Nuevo proyecto
+        </button>
+
         <div className="topbar__qualityBadge" title="Calidad seleccionada">
           <span className="dot" />
           <span className="label">

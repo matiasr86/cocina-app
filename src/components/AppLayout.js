@@ -47,7 +47,7 @@ export default function AppLayout() {
 
 function AppLayoutInner() {
   const { modules: catalog } = useModules();
-  const { user, authReady, isAdmin } = useAuth();
+  const { user, authReady, isAdmin, loginGoogle } = useAuth(); // 👈 sumé loginGoogle
 
   /* -------------------- Calidad -------------------- */
   const [quality, setQuality] = useState(null);
@@ -238,19 +238,28 @@ function AppLayoutInner() {
                 </select>
               </div>
 
-              <PdfExportButton
-                canvasRef={canvasWrapRef}
-                title="Diseño de cocina"
-                qualityName={qualityName}
-                breakdown={activeBreakdown}
-                summary={activeSummary}
-                brandName={brandName}
-                logoUrl={logoUrl}
-                customerName={customerName}
-                customerEmail={customerEmail}
-                businessPhone={businessPhone}
-                businessAddress={businessAddress}
-              />
+              {/* 👉 Exportar PDF: sólo para usuarios autenticados */}
+              {user ? (
+                <PdfExportButton
+                  canvasRef={canvasWrapRef}
+                  title="Diseño de cocina"
+                  qualityName={qualityName}
+                  breakdown={activeBreakdown}
+                  summary={activeSummary}
+                  brandName={brandName}
+                  logoUrl={logoUrl}
+                  customerName={customerName}
+                  customerEmail={customerEmail}
+                  businessPhone={businessPhone}
+                  businessAddress={businessAddress}
+                />
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+                  <span style={{ color: '#666', fontSize: 14 }}>
+                    Iniciá sesión para exportar tu diseño a PDF
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="walltabs">

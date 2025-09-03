@@ -104,8 +104,10 @@ export default function Sidebar() {
     });
   }, [catalog, nq]);
 
+  const ZO  = useMemo(() => filtered.filter(m => m.section === 'ZO'), [filtered]);
   const BM  = useMemo(() => filtered.filter(m => m.section === 'BM'), [filtered]);
   const ALA = useMemo(() => filtered.filter(m => m.section === 'ALA'), [filtered]);
+  const ALA6 = useMemo(() => filtered.filter(m => m.section === 'ALA6'), [filtered]);
   const ESP = useMemo(() => filtered.filter(m => m.section === 'ESP'), [filtered]);
   const ELE = useMemo(() => filtered.filter(m => m.section === 'ELECTRO'), [filtered]);
 
@@ -122,8 +124,10 @@ export default function Sidebar() {
         {q && <button className="clear" onClick={() => setQ('')}>✕</button>}
       </div>
       <hr></hr>
+      <Section id="zo"  title="Banquina / Zócalo" modules={ZO} />
       <Section id="bm"  title="Bajo Mesada" modules={BM} />
       <Section id="ala" title="Alacenas" modules={ALA} />
+      <Section id="ala6" title="Alacenas Puente" modules={ALA6} />
       <Section id="esp" title="Especiales" modules={ESP} />
       <Section id="ele" title="Electro" modules={ELE} />
     </aside>

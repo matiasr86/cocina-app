@@ -1,9 +1,20 @@
 // src/api/ModulesApi.js
+
 const API_BASE_URL =
   (typeof process !== 'undefined' &&
     process.env &&
     process.env.REACT_APP_API_BASE_URL) ||
   'http://localhost:4000/api';
+
+
+// Para Server
+/*
+const API_BASE_URL =
+  (typeof process !== 'undefined' &&
+    process.env &&
+    process.env.REACT_APP_API_BASE_URL) ||
+  'https://easydesign.dekam.com.ar/api';
+*/
 
 async function http(method, path, body, token) {
   const headers = { 'Content-Type': 'application/json' };
