@@ -1,4 +1,3 @@
-// src/context/AuthContext.js
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -51,7 +50,6 @@ export function AuthProvider({ children }) {
 
   const loginAdminWithPassword = async (email, password) => {
     setAdminError('');
-    // Si querés forzar que SOLO el email admin pueda loguear con password:
     if (ADMIN_EMAIL && email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
       const msg = 'Este email no está autorizado como administrador.';
       setAdminError(msg);
@@ -66,14 +64,23 @@ export function AuthProvider({ children }) {
     await signOut(auth);
   };
 
+  // 👉 helper cómodo para pedir un token fresco donde lo necesitemos
+  const getIdToken = async () => {
+    if (!auth.currentUser || !auth.currentUser.getIdToken) {
+      throw new Error('No hay usuario autenticado.');
+    }
+    return auth.currentUser.getIdToken();
+  };
+
   const value = {
     user,
     authReady,
     isAdmin,
     adminError,
     loginGoogle,
-    loginAdminWithPassword, // 👈 ahora EXISTE
+    loginAdminWithPassword,
     logout,
+    getIdToken, // 👈 expuesto
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

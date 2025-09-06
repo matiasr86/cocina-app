@@ -14,3 +14,19 @@
 .module.selected {
   outline-offset: 0; /* se pega al borde del módulo */
 }
+
+/* Por ejemplo en src/components/Canvas.css, al final */
+.canvas-surface svg line {
+  stroke: #d0d0d0;       /* un poquito más oscuro que #eee */
+}
+
+.canvas-surface svg rect {
+  fill: #f0f0f0;         /* fondo más claro para mejor contraste */
+}
+
+/* Si tus módulos tienen una clase .module o similar, marcá el borde */
+.canvas-surface .module,
+.canvas-surface [data-module] {
+  outline: 2px solid rgba(0,0,0,.85);
+  background: #fff;      /* evita transparencias lavadas */
+}

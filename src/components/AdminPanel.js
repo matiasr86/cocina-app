@@ -1,5 +1,5 @@
 // src/components/AdminPanel.js
-import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback, memo } from 'react';
 import * as XLSX from 'xlsx';
 import { useModules } from '../context/ModulesContext';
 import './AdminPanel.css';
@@ -8,7 +8,10 @@ import './AdminPanel.css';
  * AdminPanel
  * - Edición en vivo (sin botón Guardar por módulo).
  * - "Guardar y cerrar" persiste TODOS los cambios pendientes.
- * - Al abrir/reset/import, recarga SIEMPRE desde la API (sin cache local).
+ * - ⚠️ Recarga catálogo SOLO cuando:
+ *     a) Guardamos y cerramos
+ *     b) Terminamos una importación desde Excel
+ *   (No recarga automáticamente al abrir el modal)
  */
 
 function NumberInput({ value, onChange, step = 1, min, max, placeholder }) {
@@ -93,12 +96,10 @@ export default function AdminPanel({ onClose }) {
   // Drafts por type (ediciones en el panel)
   const [draftsByType, setDraftsByType] = useState({});
 
-  // Al abrir → trae SIEMPRE del server (sin fallback local)
-  useEffect(() => {
-    reloadCatalog({ force: true, noFallback: true });
-  }, [reloadCatalog]);
+  // ❌ (Quitado) Recarga automática al abrir el modal.
+  // useEffect(() => { reloadCatalog({ force: true, noFallback: true }); }, [reloadCatalog]);
 
-  // Cuando cambia el catálogo (tras reload), inicializamos drafts
+  // Cuando cambia el catálogo (p.ej. tras guardar o importar), inicializamos drafts
   useEffect(() => {
     const next = {};
     for (const m of catalogAdmin) next[m.type] = createDraftFromBase(m);
@@ -115,17 +116,14 @@ export default function AdminPanel({ onClose }) {
     });
   }, [catalogAdmin, nq]);
 
-  // handler estable para recibir cambios de cada editor
   const handleDraftChange = useCallback((type, draft) => {
-    setDraftsByType((prev) => {
-      if (prev[type] === draft) return prev; // misma referencia → no actualiza
-      return { ...prev, [type]: draft };
-    });
+    setDraftsByType((prev) => (prev[type] === draft ? prev : { ...prev, [type]: draft }));
   }, []);
 
-  // Guardado MASIVO al cerrar
+  // Guardado MASIVO al cerrar → recarga UNA sola vez al final
   const handleCloseAndSaveAll = useCallback(async () => {
     try {
+      let changed = 0;
       for (const m of catalogAdmin) {
         const draft = draftsByType[m.type];
         if (!draft) continue;
@@ -135,9 +133,12 @@ export default function AdminPanel({ onClose }) {
 
         if (!shallowEqual(current, patch)) {
           await updateOverride(m.type, patch);
+          changed++;
         }
       }
-      await reloadCatalog({ force: true, noFallback: true });
+      if (changed > 0) {
+        await reloadCatalog({ force: true, noFallback: true });
+      }
     } finally {
       onClose?.();
     }
@@ -146,12 +147,13 @@ export default function AdminPanel({ onClose }) {
   const handleReset = async () => {
     if (!window.confirm('¿Seguro que querés reestablecer todos los valores?')) return;
     await resetOverrides();
-    await reloadCatalog({ force: true, noFallback: true });
+    // (opcional) Podríamos recargar aquí, pero para minimizar requests lo evitamos.
+    // Si preferís que el panel se actualice visualmente tras el reset, descomentá:
+    // await reloadCatalog({ force: true, noFallback: true });
   };
 
   /* ----------------- Exportar a Excel ----------------- */
   const exportExcel = () => {
-    // Hoja Modulos
     const rowsMod = catalogAdmin.map((m) => ({
       type: m.type,
       name: m.name ?? m.title ?? '',
@@ -171,7 +173,6 @@ export default function AdminPanel({ onClose }) {
       { origin: 'A1' }
     );
 
-    // Hoja Medidas
     const rowsSizes = [];
     catalogAdmin.forEach((m) => {
       (m.sizes || []).forEach((s) => {
@@ -189,7 +190,6 @@ export default function AdminPanel({ onClose }) {
       origin: 'A1',
     });
 
-    // Workbook
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, wsMod, 'Modulos');
     XLSX.utils.book_append_sheet(wb, wsSizes, 'Medidas');
@@ -222,10 +222,9 @@ export default function AdminPanel({ onClose }) {
       const mods = XLSX.utils.sheet_to_json(wsMod, { defval: '' });
       const sizes = XLSX.utils.sheet_to_json(wsSizes, { defval: '' });
 
-      // Normalizo por type
       const byType = new Map();
 
-      // 1) Modulos
+      // 1) Módulos
       for (const r of mods) {
         const type = String(r.type || '').trim();
         if (!type) continue;
@@ -240,14 +239,7 @@ export default function AdminPanel({ onClose }) {
           deluxe: r.price_deluxe === '' ? null : Number(r.price_deluxe),
         };
 
-        byType.set(type, {
-          type,
-          name,
-          visible,
-          subtitle,
-          prices,
-          sizes: [],
-        });
+        byType.set(type, { type, name, visible, subtitle, prices, sizes: [] });
       }
 
       // 2) Medidas
@@ -301,8 +293,7 @@ export default function AdminPanel({ onClose }) {
       // 4) Aplicar overrides
       if (!window.confirm('Se actualizarán los módulos según el Excel. ¿Continuar?')) return;
 
-      let ok = 0,
-        fail = 0;
+      let ok = 0, fail = 0;
       for (const [type, m] of byType) {
         const patch = {
           name: m.name,
@@ -325,6 +316,7 @@ export default function AdminPanel({ onClose }) {
         }
       }
 
+      // ✅ Recarga SOLO al finalizar la importación
       await reloadCatalog({ force: true, noFallback: true });
       alert(`Importación finalizada.\nCorrectos: ${ok}\nErrores: ${fail}`);
     } catch (err) {
@@ -375,7 +367,6 @@ export default function AdminPanel({ onClose }) {
               >
                 Guardar y cerrar
               </button>
-              
             </div>
           </div>
         </div>
@@ -396,21 +387,17 @@ export default function AdminPanel({ onClose }) {
 }
 
 /* ------------ Editor de un módulo ------------ */
-function ModuleEditor({ base, initial, onDraftChange }) {
-  // Draft local: si no hay initial todavía, partimos de base
+const ModuleEditor = memo(function ModuleEditor({ base, initial, onDraftChange }) {
   const [draft, setDraft] = useState(() => initial ?? createDraftFromBase(base));
 
-  // Sincronizar el editor cuando cambie `initial` (p.ej., tras recargar del server)
   useEffect(() => {
     const next = initial ?? createDraftFromBase(base);
-    // Evita setState si no cambió realmente (previene loops)
     if (JSON.stringify(next) !== JSON.stringify(draft)) {
       setDraft(next);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, base]);
 
-  // Helpers de edición: actualizan local y notifican al padre SOLO en cambios del usuario
   const emit = useCallback(
     (next) => {
       setDraft(next);
@@ -420,16 +407,10 @@ function ModuleEditor({ base, initial, onDraftChange }) {
   );
 
   const setField = (key, val) =>
-    emit({
-      ...draft,
-      [key]: val,
-    });
+    emit({ ...draft, [key]: val });
 
   const setPrice = (k, v) =>
-    emit({
-      ...draft,
-      prices: { ...(draft.prices || {}), [k]: v === '' ? '' : Number(v) },
-    });
+    emit({ ...draft, prices: { ...(draft.prices || {}), [k]: v === '' ? '' : Number(v) } });
 
   const addSize = () => {
     const firstStd = !(draft.sizes && draft.sizes.length);
@@ -454,9 +435,7 @@ function ModuleEditor({ base, initial, onDraftChange }) {
     const cur = { ...(next[idx] || {}), ...patch };
     next[idx] = cur;
     if (patch.isStandard) {
-      next.forEach((s, i) => {
-        s.isStandard = i === idx;
-      });
+      next.forEach((s, i) => { s.isStandard = i === idx; });
     }
     emit({ ...draft, sizes: next });
   };
@@ -465,11 +444,7 @@ function ModuleEditor({ base, initial, onDraftChange }) {
     <div className="admin-item">
       <div className="admin-item__left">
         <div className="thumb">
-          {base.src ? (
-            <img src={base.src} alt={base.type} />
-          ) : (
-            <div className="thumb__ph">Sin imagen</div>
-          )}
+          {base.src ? <img src={base.src} alt={base.type} /> : <div className="thumb__ph">Sin imagen</div>}
         </div>
         <div className="meta">
           <div className="type">{base.type}</div>
@@ -508,63 +483,29 @@ function ModuleEditor({ base, initial, onDraftChange }) {
       <div className="admin-item__prices">
         <div className="prices-row">
           <span>Started</span>
-          <NumberInput
-            value={draft.prices.started}
-            onChange={(v) => setPrice('started', v)}
-            step={1}
-            min={0}
-          />
+          <NumberInput value={draft.prices.started} onChange={(v) => setPrice('started', v)} step={1} min={0} />
         </div>
         <div className="prices-row">
           <span>Premium</span>
-          <NumberInput
-            value={draft.prices.premium}
-            onChange={(v) => setPrice('premium', v)}
-            step={1}
-            min={0}
-          />
+          <NumberInput value={draft.prices.premium} onChange={(v) => setPrice('premium', v)} step={1} min={0} />
         </div>
         <div className="prices-row">
           <span>Deluxe</span>
-          <NumberInput
-            value={draft.prices.deluxe}
-            onChange={(v) => setPrice('deluxe', v)}
-            step={1}
-            min={0}
-          />
+          <NumberInput value={draft.prices.deluxe} onChange={(v) => setPrice('deluxe', v)} step={1} min={0} />
         </div>
       </div>
 
       <div className="admin-item__sizes">
         <div className="sizes-header">
           <strong>Medidas</strong>
-          <button type="button" className="btn ghost" onClick={addSize}>
-            + Agregar
-          </button>
+          <button type="button" className="btn ghost" onClick={addSize}>+ Agregar</button>
         </div>
         <div className="sizes-list">
           {(draft.sizes || []).map((s, idx) => (
             <div key={idx} className={`size-row ${s.isStandard ? 'is-std' : ''}`}>
-              <NumberInput
-                value={s.width}
-                onChange={(v) => setSize(idx, { width: v })}
-                step={1}
-                min={1}
-                placeholder="Ancho (cm)"
-              />
-              <NumberInput
-                value={s.height}
-                onChange={(v) => setSize(idx, { height: v })}
-                step={1}
-                min={1}
-                placeholder="Alto (cm)"
-              />
-              <NumberInput
-                value={s.deltaPct}
-                onChange={(v) => setSize(idx, { deltaPct: v })}
-                step={1}
-                placeholder="% ajuste"
-              />
+              <NumberInput value={s.width}  onChange={(v) => setSize(idx, { width: v })}  step={1} min={1} placeholder="Ancho (cm)" />
+              <NumberInput value={s.height} onChange={(v) => setSize(idx, { height: v })} step={1} min={1} placeholder="Alto (cm)" />
+              <NumberInput value={s.deltaPct} onChange={(v) => setSize(idx, { deltaPct: v })} step={1} placeholder="% ajuste" />
               <label className="chk">
                 <input
                   type="radio"
@@ -586,4 +527,4 @@ function ModuleEditor({ base, initial, onDraftChange }) {
       </div>
     </div>
   );
-}
+});

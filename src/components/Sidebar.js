@@ -1,4 +1,3 @@
-// src/components/Sidebar.js
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useModules } from '../context/ModulesContext';
 import './Sidebar.css';
@@ -6,7 +5,22 @@ import './Sidebar.css';
 const norm = (s = '') =>
   s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
-function Section({ id, title, modules }) {
+function moduleToPayload(m) {
+  return {
+    type: m.type,
+    title: m.name || m.title || m.type,
+    color: m.color || '#ddd',
+    src: m.src || null,
+    sizes: Array.isArray(m.sizes) ? m.sizes : [],
+    width: m.width || 60,
+    height: m.height || 60,
+    isLinear: !!m.isLinear,
+    allowedHeights: Array.isArray(m.allowedHeights) ? m.allowedHeights : undefined,
+    section: m.section,
+  };
+}
+
+function Section({ id, title, modules, onCardClick }) {
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
@@ -19,15 +33,7 @@ function Section({ id, title, modules }) {
   }, [id, open]);
 
   const onDragStart = useCallback((e, m) => {
-    const payload = {
-      type: m.type,
-      title: m.name || m.title || m.type,
-      color: m.color || '#ddd',
-      src: m.src || null,
-      sizes: Array.isArray(m.sizes) ? m.sizes : [],
-      width: m.width || 60,
-      height: m.height || 60,
-    };
+    const payload = moduleToPayload(m);
     e.dataTransfer.setData('application/x-module', JSON.stringify(payload));
     e.dataTransfer.effectAllowed = 'copy';
   }, []);
@@ -59,6 +65,9 @@ function Section({ id, title, modules }) {
                 className="sb-card sb-card--simple"
                 draggable
                 onDragStart={(e) => onDragStart(e, m)}
+                onClick={() => onCardClick?.(moduleToPayload(m))}
+                style={{ cursor: 'pointer' }}
+                title="Arrastrá al lienzo o hacé click para colocar"
               >
                 <div className="sb-card-fig" style={{ width: pw, height: ph }}>
                   {m.src ? (
@@ -91,7 +100,7 @@ function Section({ id, title, modules }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onModuleClick }) {
   const { modules: catalog } = useModules();
   const [q, setQ] = useState('');
   const nq = norm(q);
@@ -104,12 +113,12 @@ export default function Sidebar() {
     });
   }, [catalog, nq]);
 
-  const ZO  = useMemo(() => filtered.filter(m => m.section === 'ZO'), [filtered]);
-  const BM  = useMemo(() => filtered.filter(m => m.section === 'BM'), [filtered]);
-  const ALA = useMemo(() => filtered.filter(m => m.section === 'ALA'), [filtered]);
-  const ALA6 = useMemo(() => filtered.filter(m => m.section === 'ALA6'), [filtered]);
-  const ESP = useMemo(() => filtered.filter(m => m.section === 'ESP'), [filtered]);
-  const ELE = useMemo(() => filtered.filter(m => m.section === 'ELECTRO'), [filtered]);
+  const ZO   = useMemo(() => filtered.filter(m => m.section === 'ZO'), [filtered]);
+  const BM   = useMemo(() => filtered.filter(m => m.section === 'BM'), [filtered]);
+  const ALA  = useMemo(() => filtered.filter(m => m.section === 'ALA'), [filtered]);
+  const ALAP = useMemo(() => filtered.filter(m => m.section === 'ALAP'), [filtered]);
+  const ESP  = useMemo(() => filtered.filter(m => m.section === 'ESP'), [filtered]);
+  const ELE  = useMemo(() => filtered.filter(m => m.section === 'ELECTRO'), [filtered]);
 
   return (
     <aside className="sidebar">
@@ -123,13 +132,14 @@ export default function Sidebar() {
         />
         {q && <button className="clear" onClick={() => setQ('')}>✕</button>}
       </div>
-      <hr></hr>
-      <Section id="zo"  title="Banquina / Zócalo" modules={ZO} />
-      <Section id="bm"  title="Bajo Mesada" modules={BM} />
-      <Section id="ala" title="Alacenas" modules={ALA} />
-      <Section id="ala6" title="Alacenas Puente" modules={ALA6} />
-      <Section id="esp" title="Especiales" modules={ESP} />
-      <Section id="ele" title="Electro" modules={ELE} />
+      <hr />
+
+      <Section id="zo"   title="Banquina / Zócalo"   modules={ZO}   onCardClick={onModuleClick} />
+      <Section id="bm"   title="Bajo Mesada"         modules={BM}   onCardClick={onModuleClick} />
+      <Section id="ala"  title="Alacenas"            modules={ALA}  onCardClick={onModuleClick} />
+      <Section id="alap" title="Alacenas Puente"     modules={ALAP} onCardClick={onModuleClick} />
+      <Section id="esp"  title="Especiales"          modules={ESP}  onCardClick={onModuleClick} />
+      <Section id="ele"  title="Electro"             modules={ELE}  onCardClick={onModuleClick} />
     </aside>
   );
 }

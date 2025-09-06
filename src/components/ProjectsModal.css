@@ -1,0 +1,125 @@
+/* overlay a pantalla completa */
+.pm-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* caja del modal */
+.pm-modal{
+  width: min(980px, 94vw);
+  max-height: 82vh;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 16px 46px rgba(0,0,0,.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* header */
+.pm-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  font-weight: 700;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+/* body con buen padding */
+.pm-body{
+  padding: 16px 20px 18px;
+  overflow: auto;
+}
+
+/* toolbar superior */
+.pm-toolbar{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.pm-new{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.pm-new .input{ width: 260px; }
+
+/* lista */
+.pm-list{
+  display: grid;
+  gap: 10px;
+}
+.pm-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fff;
+}
+.pm-meta{ min-width: 0; }
+.pm-title{ font-weight: 700; }
+.pm-sub{ color: #666; font-size: 12px; }
+
+.pm-actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pm-actions .btn{ min-width: 84px; }
+
+/* inputs base si no tenés estilos globales */
+.input{
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 36px;
+}
+
+/* ---- Confirm inline ---- */
+.pm-confirm{
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.25);
+  z-index: 1100;
+}
+.pm-confirm__box{
+  width: min(380px, 90vw);
+  background: #2b2f3a;
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 16px 46px rgba(0,0,0,.35);
+  padding: 16px 18px;
+}
+.pm-confirm__text{ margin-bottom: 12px; }
+.pm-confirm__actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* responsive */
+@media (max-width: 560px){
+  .pm-toolbar{
+    grid-template-columns: 1fr;
+  }
+  .pm-new{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pm-new .input{ width: 100%; }
+}

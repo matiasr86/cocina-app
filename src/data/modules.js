@@ -38,7 +38,7 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 120,
-    height: 90,
+    height: 78,
     src: "/assets/modules/bajo-mesada/bm2p.png"
   },
   {
@@ -48,8 +48,8 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 60,
-    height: 90,
-    src: "/assets/modules/bajo-mesada/bm1pi.jpeg"
+    height: 78,
+    src: "/assets/modules/bajo-mesada/bm1pi.png"
   },
   {
     type: "bm1pd",
@@ -58,8 +58,8 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 60,
-    height: 90,
-    src: "/assets/modules/bajo-mesada/bm1pd.jpeg"
+    height: 78,
+    src: "/assets/modules/bajo-mesada/bm1pd.png"
   },
   
   {
@@ -69,8 +69,8 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 120,
-    height: 90,
-    src: "/assets/modules/bajo-mesada/2-drawer-cabinet.jpeg"
+    height: 78,
+    src: "/assets/modules/bajo-mesada/2-drawer-cabinet.png"
   },
   {
     type: "3-drawer-cabinet",
@@ -79,8 +79,8 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 60,
-    height: 90,
-    src: "/assets/modules/bajo-mesada/3-drawer-cabinet.jpeg"
+    height: 78,
+    src: "/assets/modules/bajo-mesada/3-drawer-cabinet.png"
   },
   {
     type: "3-drawer-cabinet2",
@@ -89,8 +89,8 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 60,
-    height: 90,
-    src: "/assets/modules/bajo-mesada/3-drawer-cabinet2.jpeg"
+    height: 78,
+    src: "/assets/modules/bajo-mesada/3-drawer-cabinet2.png"
   },
   {
     type: "BM-oven",
@@ -99,7 +99,7 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 60,
-    height: 90,
+    height: 78,
     src: "/assets/modules/bajo-mesada/BM-oven.png"
   },
   {
@@ -109,7 +109,7 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 40,
-    height: 90,
+    height: 78,
     src: "/assets/modules/bajo-mesada/BM-trash-can.png"
   },
   {
@@ -119,8 +119,8 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 20,
-    height: 90,
-    src: "/assets/modules/bajo-mesada/spice-rack.jpeg"
+    height: 78,
+    src: "/assets/modules/bajo-mesada/spice-rack.png"
   },
   {
     type: "storekeeper",
@@ -129,8 +129,8 @@ const modules = [
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 15,
-    height: 90,
-    src: "/assets/modules/bajo-mesada/storekeeper.jpeg"
+    height: 78,
+    src: "/assets/modules/bajo-mesada/storekeeper.png"
   },
   //Alacenas
   {
@@ -214,6 +214,89 @@ const modules = [
     height: 30,
     src: "/assets/modules/alacenas/AlaH35-SP2.png"
   },
+
+  //Alacenas Puente
+  {
+    type: "Ala60-2P-v",
+    title: "AL 2 Puertas",
+    subtitle: "2 Puertas + Estante. Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacena-puente/Ala60-2P.png"
+  },
+  {
+    type: "Ala60-1PD",
+    title: "AL 1 Puerta Der",
+    subtitle: "1 Puerta + Estante. Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 40,
+    height: 60,
+    src: "/assets/modules/alacena-puente/Ala60-1PD.png"
+  },
+  {
+    type: "Ala60-1PI",
+    title: "AL 1 Puerta Izq",
+    subtitle: "1 Puerta + Estante. Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 40,
+    height: 60,
+    src: "/assets/modules/alacena-puente/Ala60-1PI.png"
+  },
+  {
+    type: "AlaH60-2P",
+    title: "AL 2 Puertas",
+    subtitle: "2 Puertas Horizontal +1 Estante. Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacena-puente/AlaH60-2P.png"
+  },
+  
+  {
+    type: "AlaH60-1P",
+    title: "AL 1 Puerta",
+    subtitle: "1 Puerta Horizontal. Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 80,
+    height: 30,
+    src: "/assets/modules/alacena-puente/AlaH60-1P.png"
+  },
+  {
+    type: "Ala-extra60",
+    title: "AL 1 Puerta",
+    subtitle: "1 Puerta + Extractor. Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacena-puente/Ala-extra60.png"
+  },
+  {
+    type: "AlaH60-SP",
+    title: "AL Sin Puertas",
+    subtitle: "1 Estante. Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 80,
+    height: 60,
+    src: "/assets/modules/alacena-puente/AlaH60-SP.png"
+  },
+  {
+    type: "AlaH60-SP2",
+    title: "AL Sin Puerta",
+    subtitle: "Prof. 60 cm",
+    section: "ALAP",
+    sectionLabel: "ALACENA PUENTE",
+    width: 80,
+    height: 30,
+    src: "/assets/modules/alacena-puente/AlaH60-SP2.png"
+  },
   
   //Especiales
   {
@@ -223,8 +306,8 @@ const modules = [
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
-    height: 211,
-    src: "/assets/modules/especiales/colum1.jpeg"
+    height: 140,
+    src: "/assets/modules/especiales/colum1.png"
   },
   {
     type: "colum2",
@@ -233,19 +316,10 @@ const modules = [
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
-    height: 211,
-    src: "/assets/modules/especiales/colum2.jpeg"
+    height: 140,
+    src: "/assets/modules/especiales/colum2.png"
   },
-  {
-    type: "colum3",
-    title: "AL Columna 3",
-    subtitle: "60 X 211 cm - 2 Cajones + Horno + 2 Puertas Sup",
-    section: "ESP",
-    sectionLabel: "ESPECIALES",
-    width: 60,
-    height: 213,
-    src: "/assets/modules/especiales/colum3.png"
-  },
+
   //Electro
   {
     type: "fridge-right",
@@ -294,7 +368,7 @@ const modules = [
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 60,
-    height: 90,
+    height: 85,
     src: "/assets/modules/electro/washing-machine.jpeg"
   },
   {
@@ -304,7 +378,7 @@ const modules = [
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 60,
-    height: 90,
+    height: 85,
     src: "/assets/modules/electro/dishwasher.jpeg"
   },
 

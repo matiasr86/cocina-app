@@ -1,4 +1,3 @@
-// src/components/AppLayout.js
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
@@ -8,30 +7,27 @@ import QualityPicker from './QualityPicker';
 import AdminPanel from './AdminPanel';
 import { ModulesProvider, useModules } from '../context/ModulesContext';
 import { QUALITIES } from '../data/qualities';
-
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import AdminEmailLoginModal from './AdminEmailLoginModal';
-
 import PdfExportButton from './PdfExportButton';
+import ProjectsModal from './ProjectsModal';
+import { ToastProvider } from './ToastProvider';
 import './AppLayout.css';
 
 const LS_KEY_LAYOUT  = 'kitchen.layout.v1';
 const LS_KEY_QUALITY = 'kitchen.quality.v1';
+const modulesKey = (wallId) => `kitchen.modules.${wallId || 'default'}`;
 
 const makeWallsByType = (type) => {
-  if (type === 'L') {
-    return [
-      { id: 'left',  name: 'Pared Izquierda', width: 4,   height: 3 },
-      { id: 'right', name: 'Pared Derecha',   width: 4,   height: 3 },
-    ];
-  }
-  if (type === 'C') {
-    return [
-      { id: 'left',  name: 'Pared Izquierda', width: 3.5, height: 3 },
-      { id: 'front', name: 'Pared Frontal',   width: 4.0, height: 3 },
-      { id: 'right', name: 'Pared Derecha',   width: 3.5, height: 3 },
-    ];
-  }
+  if (type === 'L') return [
+    { id: 'left',  name: 'Pared Izquierda', width: 4,   height: 3 },
+    { id: 'right', name: 'Pared Derecha',   width: 4,   height: 3 },
+  ];
+  if (type === 'C') return [
+    { id: 'left',  name: 'Pared Izquierda', width: 3.5, height: 3 },
+    { id: 'front', name: 'Pared Frontal',   width: 4.0, height: 3 },
+    { id: 'right', name: 'Pared Derecha',   width: 3.5, height: 3 },
+  ];
   return [{ id: 'front', name: 'Pared Frontal', width: 4, height: 3 }];
 };
 
@@ -39,7 +35,9 @@ export default function AppLayout() {
   return (
     <AuthProvider>
       <ModulesProvider>
-        <AppLayoutInner />
+        <ToastProvider>
+          <AppLayoutInner />
+        </ToastProvider>
       </ModulesProvider>
     </AuthProvider>
   );
@@ -47,9 +45,9 @@ export default function AppLayout() {
 
 function AppLayoutInner() {
   const { modules: catalog } = useModules();
-  const { user, authReady, isAdmin, loginGoogle } = useAuth(); // 👈 sumé loginGoogle
+  const { user, authReady, isAdmin } = useAuth();
 
-  /* -------------------- Calidad -------------------- */
+  /* ------------ Calidad ------------ */
   const [quality, setQuality] = useState(null);
   useEffect(() => {
     const raw = localStorage.getItem(LS_KEY_QUALITY);
@@ -64,14 +62,15 @@ function AppLayoutInner() {
     [quality]
   );
   const priceKey =
-    quality === 'deluxe' ? 'deluxe' :
+    quality === 'deluxe'  ? 'deluxe'  :
     quality === 'premium' ? 'premium' :
     'started';
 
-  /* -------------------- Paredes/Layout -------------------- */
-  const [kitchenType, setKitchenType] = useState('Recta');
-  const [wallsState, setWallsState] = useState(() => makeWallsByType('Recta'));
+  /* ------------ Layout / paredes ------------ */
+  const [kitchenType, setKitchenType]   = useState('Recta');
+  const [wallsState, setWallsState]     = useState(() => makeWallsByType('Recta'));
   const [activeWallId, setActiveWallId] = useState(() => makeWallsByType('Recta')[0].id);
+  const [canvasVersion, setCanvasVersion] = useState(0);
 
   useEffect(() => {
     try {
@@ -107,12 +106,17 @@ function AppLayoutInner() {
 
   const activeWall = walls.find((w) => w.id === activeWallId) ?? walls[0];
 
-  /* -------------------- Resumen + Estimación (con detalle) -------------------- */
+  /* ------------ Módulos por pared ------------ */
+  const [modulesByWall, setModulesByWall] = useState({});
+
+  /* ------------ Resumen / Estimación ------------ */
   const [summaries, setSummaries] = useState({});
   const [breakdowns, setBreakdowns] = useState({});
 
   const handleModulesChange = useCallback(
     (wallId, mods) => {
+      setModulesByWall((prev) => ({ ...prev, [wallId]: mods }));
+
       const byTitle = mods.reduce((acc, m) => {
         const t = (m.title && String(m.title).trim()) || 'Módulo';
         acc[t] = (acc[t] || 0) + 1;
@@ -136,7 +140,6 @@ function AppLayoutInner() {
       for (const m of mods) {
         const meta = byTypeMeta.get(m.type);
         if (!meta) continue;
-
         const base = meta?.prices?.[priceKey];
         if (typeof base !== 'number') continue;
 
@@ -187,32 +190,97 @@ function AppLayoutInner() {
   const activeSummary   = summaries[activeWallId]   || {};
   const activeBreakdown = breakdowns[activeWallId] || { items: [], total: 0, instances: [] };
 
-  /* -------------------- Admin / Login -------------------- */
+  /* ------------ Admin ------------ */
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
 
   const openAdmin = () => {
     if (!authReady) return;
-    if (!isAdmin) {
-      setAdminLoginOpen(true);
-      return;
-    }
+    if (!isAdmin) { setAdminLoginOpen(true); return; }
     setAdminOpen(true);
   };
   const closeAdmin = () => setAdminOpen(false);
 
-  /* -------------------- Export PDF: refs + branding -------------------- */
-  const canvasWrapRef = useRef(null);
+  /* ------------ Modal de Proyectos ------------ */
+  const [projectsOpen, setProjectsOpen] = useState(false);
 
+  const getCurrentDesign = useCallback(() => ({
+    kitchenType,
+    walls: wallsState,
+    modulesByWall,
+    quality,
+    summary:   summaries,
+    breakdown: breakdowns,
+    activeWallId,
+  }), [kitchenType, wallsState, modulesByWall, quality, summaries, breakdowns, activeWallId]);
+
+  const handleLoadProject = useCallback((project) => {
+    try {
+      const {
+        kitchenType: kt,
+        walls:       projectWalls,
+        modulesByWall: mbw,
+        quality:     q,
+        activeWallId: savedActive,
+      } = project || {};
+
+      const nextType  = kt || 'Recta';
+      const nextWalls = (Array.isArray(projectWalls) && projectWalls.length)
+        ? projectWalls
+        : makeWallsByType(nextType);
+
+      setKitchenType(nextType);
+      setWallsState(nextWalls);
+      setActiveWallId(savedActive || nextWalls[0]?.id || 'front');
+      if (q) setQuality(q);
+
+      const layoutPayload = {
+        kitchenType: nextType,
+        walls: nextWalls,
+        activeWallId: savedActive || nextWalls[0]?.id || 'front',
+      };
+      try { localStorage.setItem(LS_KEY_LAYOUT, JSON.stringify(layoutPayload)); } catch {}
+
+      const localMap = {};
+      for (const w of nextWalls) {
+        let mods = [];
+        if (mbw && typeof mbw === 'object' && Array.isArray(mbw[w.id])) {
+          mods = mbw[w.id];
+        } else if (Array.isArray(w.modules)) {
+          mods = w.modules;
+        }
+        localMap[w.id] = mods;
+        try { localStorage.setItem(modulesKey(w.id), JSON.stringify(mods)); } catch {}
+      }
+      setModulesByWall(localMap);
+      setCanvasVersion((v) => v + 1);
+    } catch (e) {
+      console.error('[load project] error', e);
+      alert('No se pudo cargar el proyecto.');
+    }
+  }, []);
+
+  /* ------------ Export PDF ------------ */
+  const canvasWrapRef = useRef(null);
   const brandName = 'Easy Kitchen Design';
   const logoUrl = '/logo512.png';
   const businessPhone = '3413289463';
   const businessAddress = '';
-
   const customerName  = user?.displayName || '';
   const customerEmail = user?.email || '';
 
   const showQualityPicker = !quality;
+
+  /* ------------ CLICK-TO-PLACE: refs a cada Canvas ------------ */
+  const canvasRefs = useRef({});
+  const getCanvasRef = useCallback((id) => {
+    if (!canvasRefs.current[id]) canvasRefs.current[id] = React.createRef();
+    return canvasRefs.current[id];
+  }, []);
+  const handleSidebarModuleClick = useCallback((meta) => {
+    const ref = canvasRefs.current[activeWallId];
+    ref?.current?.placeModuleFromSidebar?.(meta);
+  }, [activeWallId]);
 
   return (
     <div className="app">
@@ -224,7 +292,9 @@ function AppLayoutInner() {
       />
 
       <div className="app__main">
-        <div className="app__left"><Sidebar /></div>
+        <div className="app__left">
+          <Sidebar onModuleClick={handleSidebarModuleClick} />
+        </div>
 
         <main className="app__center">
           <div className="workspace">
@@ -238,28 +308,33 @@ function AppLayoutInner() {
                 </select>
               </div>
 
-              {/* 👉 Exportar PDF: sólo para usuarios autenticados */}
-              {user ? (
-                <PdfExportButton
-                  canvasRef={canvasWrapRef}
-                  title="Diseño de cocina"
-                  qualityName={qualityName}
-                  breakdown={activeBreakdown}
-                  summary={activeSummary}
-                  brandName={brandName}
-                  logoUrl={logoUrl}
-                  customerName={customerName}
-                  customerEmail={customerEmail}
-                  businessPhone={businessPhone}
-                  businessAddress={businessAddress}
-                />
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
-                  <span style={{ color: '#666', fontSize: 14 }}>
-                    Iniciá sesión para exportar tu diseño a PDF
-                  </span>
-                </div>
-              )}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                {/* Solo logueado: Mis proyectos */}
+                {user && (
+                  <button className="btn outline" onClick={() => setProjectsOpen(true)}>
+                    Mis proyectos
+                  </button>
+                )}
+
+                {/* Exportar PDF: sólo logueado */}
+                {user ? (
+                  <PdfExportButton
+                    canvasRef={canvasWrapRef}
+                    title="Diseño de cocina"
+                    qualityName={qualityName}
+                    breakdown={activeBreakdown}
+                    summary={activeSummary}
+                    brandName={brandName}
+                    logoUrl={logoUrl}
+                    customerName={customerName}
+                    customerEmail={customerEmail}
+                    businessPhone={businessPhone}
+                    businessAddress={businessAddress}
+                  />
+                ) : (
+                  <div style={{ color: '#666', fontSize: 14 }}>Iniciá sesión guardar y exportar a PDF</div>
+                )}
+              </div>
             </div>
 
             <div className="walltabs">
@@ -276,8 +351,9 @@ function AppLayoutInner() {
 
             <div className="workspace__canvas" ref={canvasWrapRef}>
               {walls.map((w) => (
-                <div key={w.id} style={{ display: w.id === activeWallId ? 'block' : 'none' }}>
+                <div key={`${w.id}:${canvasVersion}`} style={{ display: w.id === activeWallId ? 'block' : 'none' }}>
                   <Canvas
+                    ref={getCanvasRef(w.id)}
                     wallId={w.id}
                     label={w.name}
                     initialWidth={w.width}
@@ -287,7 +363,8 @@ function AppLayoutInner() {
                 </div>
               ))}
             </div>
-
+            <hr></hr>
+            <spam className="app__center">Consejito: Utiliza un lienzo amplio y ajusta las paredes al final</spam>
             <div className="wall-dimensions">
               <div className="field">
                 <label>Ancho de la pared (m)</label>
@@ -319,8 +396,16 @@ function AppLayoutInner() {
       )}
 
       {adminLoginOpen && <AdminEmailLoginModal onClose={() => setAdminLoginOpen(false)} />}
-
       {adminOpen && isAdmin && <AdminPanel onClose={closeAdmin} />}
+
+      {projectsOpen && (
+        <ProjectsModal
+          open={projectsOpen}
+          onClose={() => setProjectsOpen(false)}
+          getCurrentDesign={getCurrentDesign}
+          onLoadProject={handleLoadProject}
+        />
+      )}
     </div>
   );
 }

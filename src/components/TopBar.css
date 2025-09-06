@@ -157,3 +157,33 @@
   .btn{ padding:8px 10px; }
 }
 
+
+
+/* Overlay para confirm del botón Nuevo proyecto */
+.confirmOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200; /* por encima del resto */
+}
+
+.confirmBox{
+  width: min(420px, 90vw);
+  background: #2b2f3a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 16px 46px rgba(0,0,0,.35);
+}
+
+.confirmActions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+
