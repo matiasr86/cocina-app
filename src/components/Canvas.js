@@ -20,8 +20,8 @@ const modulesKey = (wallId) => `kitchen.modules.${wallId || 'default'}`;
 function CanvasInner({
   wallId = 'front',
   label,
-  initialWidth = 4,   // metros
-  initialHeight = 3,  // metros
+  initialWidth = 4,
+  initialHeight = 3,
   onModulesChange,
 }, ref) {
   const [modules, setModules] = useState([]);
@@ -86,7 +86,7 @@ function CanvasInner({
 
   const handleCanvasClick = () => setSelectedId(null);
 
-  /* ------------ DnD existente ------------ */
+  /* ------------ DnD ------------ */
   const handleCanvasDragOver = useCallback((e) => {
     const hasPayload = e.dataTransfer?.types?.includes('application/x-module');
     if (hasPayload) e.preventDefault();
@@ -104,8 +104,7 @@ function CanvasInner({
         type:  data.type,
         title: data.title || data.name || 'Módulo',
         x: dropX,
-        // almacenamos y en coords "desde abajo"
-        y: pxH - dropY - height,
+        y: pxH - dropY - height, // almacenamos y desde abajo
         width,
         height,
         adjPct,
@@ -120,10 +119,10 @@ function CanvasInner({
     [pxH, sanitizeRect, collides]
   );
 
-  /* ------------ detección de lineales ------------ */
+  /* ------------ lineales ------------ */
   const isLinearModule = (data) => {
     if (data?.isLinear) return true;
-    if (data?.section === 'ZO') return true; // Zócalo / Banquina
+    if (data?.section === 'ZO') return true;
     const txt = (data?.type || data?.title || '').toString();
     return /banquina|z[oó]calo/i.test(txt);
   };
@@ -140,7 +139,6 @@ function CanvasInner({
     return [10, 12, 15];
   };
 
-  /* ------------ DROP ------------ */
   const handleCanvasDrop = useCallback(
     (e) => {
       const payload = e.dataTransfer.getData('application/x-module');
@@ -185,7 +183,7 @@ function CanvasInner({
     [finalizeDrop, zoom]
   );
 
-  /* ------------ CLICK-TO-PLACE (buscar hueco abajo→arriba, izq→der) ------------ */
+  /* ------------ click-to-place (hueco) ------------ */
   const findFreeTopLeft = useCallback((w, h) => {
     const step = GRID_STEP;
     for (let yTop = pxH - h; yTop >= 0; yTop -= step) {
@@ -302,7 +300,6 @@ function CanvasInner({
 
   /* ------------ scrollbars condicionales ------------ */
   const canvasOverflow = zoom > 1.001 ? 'auto' : 'hidden';
-
   useEffect(() => {
     if (!canvasRef.current) return;
     if (zoom <= 1.001) {
@@ -325,40 +322,27 @@ function CanvasInner({
   const editorW = 230;
   const editorH = 170;
 
-  // Posicionador del panel de edición (no tapa el módulo)
+  // ✅ Nuevo: acoplar SIEMPRE al costado opuesto del módulo (no lo tapa).
   const computeEditorPos = (m) => {
-    const mTop  = pxH - m.y - m.height;
+    const mTop  = pxH - m.y - m.height;    // top real del módulo (sistema top-left)
     const mLeft = AXIS_MARGIN + m.x;
-    const mRect = { left: mLeft, top: mTop, right: mLeft + m.width, bottom: mTop + m.height };
+    const mCenterX = mLeft + m.width / 2;
 
-    const maxRight  = AXIS_MARGIN + pxW - 4;
-    const maxBottom = pxH - 4;
+    const gridLeft  = AXIS_MARGIN;
+    const gridRight = AXIS_MARGIN + pxW;
 
-    const within = (l, t) =>
-      l >= 10 &&
-      t >= 10 &&
-      l + editorW <= maxRight - 6 &&
-      t + editorH <= maxBottom - 6;
+    const preferRight = mCenterX < (gridLeft + pxW / 2); // módulo en mitad izquierda → panel a la derecha
 
-    const noOverlap = (l, t) =>
-      l >= mRect.right + 2 || l + editorW <= mRect.left - 2 ||
-      t >= mRect.bottom + 2 || t + editorH <= mRect.top - 2;
+    const leftDock  = 10;                            // sobre la zona del eje Y
+    const rightDock = gridRight - editorW - 10;      // pegado al borde derecho
 
-    const candidates = [
-      { left: mRect.right + 8,          top: mTop },
-      { left: mRect.left - editorW - 8, top: mTop },
-      { left: mRect.left,               top: mRect.top - editorH - 8 },
-      { left: mRect.left,               top: mRect.bottom + 8 },
-    ];
+    const maxTop = pxH - editorH - 6;
+    const top    = Math.max(10, Math.min(mTop, maxTop));
 
-    for (const c of candidates) {
-      const l = Math.round(c.left), t = Math.round(c.top);
-      if (within(l, t) && noOverlap(l, t)) return { left: l, top: t };
-    }
-
-    const lf = Math.min(maxRight - editorW - 6, Math.max(10, mRect.right + 8));
-    const tp = Math.max(10, Math.min(maxBottom - editorH - 6, mTop));
-    return { left: lf, top: tp };
+    return {
+      left: Math.max(10, preferRight ? rightDock : leftDock),
+      top
+    };
   };
 
   const editorPos = selectedModule
@@ -396,7 +380,7 @@ function CanvasInner({
           width: pxW + AXIS_MARGIN,
           height: pxH + BOTTOM_MARGIN,
           position: 'relative',
-          overflow: canvasOverflow,        // barras sólo con zoom in
+          overflow: canvasOverflow,
         }}
         onDragOver={handleCanvasDragOver}
         onDrop={handleCanvasDrop}
@@ -409,18 +393,15 @@ function CanvasInner({
             height={pxH + BOTTOM_MARGIN}
             style={{ display: 'block' }}
           >
-            {/* Grilla */}
+            {/* Cuadriculado */}
             <g transform={`translate(${AXIS_MARGIN}, 0)`}>
               <rect width={pxW} height={pxH} fill="#dcdcdc" stroke="#ccc" />
-              {/* Verticales: desde la izquierda (esto ya estaba OK) */}
               {Array.from({ length: Math.floor(pxW / GRID_STEP) + 1 }, (_, i) => (
                 <line key={`v${i}`} x1={i * GRID_STEP} y1={0} x2={i * GRID_STEP} y2={pxH} stroke="#eee" />
               ))}
-              {/* HORIZONTALES: ✅ ahora desde ABAJO para alinear con etiquetas */}
-              {Array.from({ length: Math.floor(pxH / GRID_STEP) + 1 }, (_, i) => {
-                const y = pxH - i * GRID_STEP;
-                return <line key={`h${i}`} x1={0} y1={y} x2={pxW} y2={y} stroke="#eee" />;
-              })}
+              {Array.from({ length: Math.floor(pxH / GRID_STEP) + 1 }, (_, i) => (
+                <line key={`h${i}`} x1={0} y1={i * GRID_STEP} x2={pxW} y2={i * GRID_STEP} stroke="#eee" />
+              ))}
             </g>
 
             {/* EJE X */}
@@ -436,7 +417,7 @@ function CanvasInner({
               );
             })}
 
-            {/* EJE Y (de abajo hacia arriba — ya estaba correcto) */}
+            {/* EJE Y */}
             {Array.from({ length: Math.floor(pxH / LABEL_STEP) + 1 }, (_, i) => {
               const y = pxH - i * LABEL_STEP;
               return (

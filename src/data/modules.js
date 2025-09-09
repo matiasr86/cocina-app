@@ -219,7 +219,7 @@ const modules = [
   {
     type: "Ala60-2P-v",
     title: "AL 2 Puertas",
-    subtitle: "2 Puertas + Estante. Prof. 60 cm",
+    subtitle: "2 Puertas + Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 80,
@@ -229,7 +229,7 @@ const modules = [
   {
     type: "Ala60-1PD",
     title: "AL 1 Puerta Der",
-    subtitle: "1 Puerta + Estante. Prof. 60 cm",
+    subtitle: "1 Puerta + Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 40,
@@ -239,7 +239,7 @@ const modules = [
   {
     type: "Ala60-1PI",
     title: "AL 1 Puerta Izq",
-    subtitle: "1 Puerta + Estante. Prof. 60 cm",
+    subtitle: "1 Puerta + Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 40,
@@ -249,7 +249,7 @@ const modules = [
   {
     type: "AlaH60-2P",
     title: "AL 2 Puertas",
-    subtitle: "2 Puertas Horizontal +1 Estante. Prof. 60 cm",
+    subtitle: "2 Puertas Horizontal +1 Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 80,
@@ -260,7 +260,7 @@ const modules = [
   {
     type: "AlaH60-1P",
     title: "AL 1 Puerta",
-    subtitle: "1 Puerta Horizontal. Prof. 60 cm",
+    subtitle: "1 Puerta Horizontal. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 80,
@@ -270,7 +270,7 @@ const modules = [
   {
     type: "Ala-extra60",
     title: "AL 1 Puerta",
-    subtitle: "1 Puerta + Extractor. Prof. 60 cm",
+    subtitle: "1 Puerta + Extractor. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 80,
@@ -280,7 +280,7 @@ const modules = [
   {
     type: "AlaH60-SP",
     title: "AL Sin Puertas",
-    subtitle: "1 Estante. Prof. 60 cm",
+    subtitle: "1 Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 80,
@@ -290,7 +290,7 @@ const modules = [
   {
     type: "AlaH60-SP2",
     title: "AL Sin Puerta",
-    subtitle: "Prof. 60 cm",
+    subtitle: "Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
     width: 80,
@@ -300,9 +300,29 @@ const modules = [
   
   //Especiales
   {
+    type: "BM-ESQ-1",
+    title: "ESP Esquinero",
+    subtitle: "Esquinero derecho",
+    section: "ESP",
+    sectionLabel: "ESQUINERO",
+    width: 100,
+    height: 78,
+    src: "/assets/modules/especiales/BM-ESQ-1.png"
+  },
+  {
+    type: "BM-ESQ-2",
+    title: "ESP Esquinero",
+    subtitle: "Esquinero izquierdo",
+    section: "ESP",
+    sectionLabel: "ESQUINERO",
+    width: 100,
+    height: 78,
+    src: "/assets/modules/especiales/BM-ESQ-2.png"
+  },
+  {
     type: "colum1",
     title: "AL Columna 1",
-    subtitle: "60 X 211 cm - 2 Cajones + Horno + Micro + Puerta Sup",
+    subtitle: "60 X 140 cm - 1 Cajón + Horno + Micro",
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
@@ -312,12 +332,42 @@ const modules = [
   {
     type: "colum2",
     title: "AL Columna 2",
-    subtitle: "60 X 211 cm - 1 Puerta + Horno + Puerta Sup",
+    subtitle: "60 X 140 cm - 2 Cajones + Horno",
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
     height: 140,
     src: "/assets/modules/especiales/colum2.png"
+  },
+  {
+    type: "colum3",
+    title: "AL Columna 3",
+    subtitle: "60 X 140 cm - 1 Puerta + 1 Estante + Horno",
+    section: "ESP",
+    sectionLabel: "ESPECIALES",
+    width: 60,
+    height: 140,
+    src: "/assets/modules/especiales/colum3.png"
+  },
+  {
+    type: "colum4",
+    title: "AL Columna 4",
+    subtitle: "60 X 140 cm - 1 Puerta Izquierda + 2 Estante",
+    section: "ESP",
+    sectionLabel: "ESPECIALES",
+    width: 60,
+    height: 140,
+    src: "/assets/modules/especiales/colum4.png"
+  },
+  {
+    type: "colum5",
+    title: "AL Columna 5",
+    subtitle: "60 X 140 cm - 1 Puerta Derecha + 2 Estante",
+    section: "ESP",
+    sectionLabel: "ESPECIALES",
+    width: 60,
+    height: 140,
+    src: "/assets/modules/especiales/colum5.png"
   },
 
   //Electro

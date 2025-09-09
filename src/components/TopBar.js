@@ -42,7 +42,8 @@ export default function TopBar({ qualityName, onChangeQuality, onAdmin, onOpenAd
         {/* Izquierda - marca */}
         <div className="topbar__brand">
           <img src="/dk.png" width="100" height="55" alt="Logo Dekam" />
-          <span className="topbar__brandName">Easy Kitchen Design (Beta)</span>
+          <span className="topbar__brandName">Easy Kitchen Design</span>
+          <span className="app-footer__tag">Beta</span>
         </div>
 
         {/* Centro - nuevo proyecto + calidad */}

@@ -12,6 +12,7 @@ import AdminEmailLoginModal from './AdminEmailLoginModal';
 import PdfExportButton from './PdfExportButton';
 import ProjectsModal from './ProjectsModal';
 import { ToastProvider } from './ToastProvider';
+import Footer from './Footer';
 import './AppLayout.css';
 
 const LS_KEY_LAYOUT  = 'kitchen.layout.v1';
@@ -406,6 +407,7 @@ function AppLayoutInner() {
           onLoadProject={handleLoadProject}
         />
       )}
+      <Footer />
     </div>
   );
 }

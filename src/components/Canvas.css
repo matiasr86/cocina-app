@@ -30,3 +30,10 @@
   outline: 2px solid rgba(0,0,0,.85);
   background: #fff;      /* evita transparencias lavadas */
 }
+
+/* Cabecera del panel de edición */
+.canvas-editor__header {
+  cursor: move;
+  user-select: none;
+}
+

@@ -136,8 +136,8 @@ export default function Sidebar({ onModuleClick }) {
 
       <Section id="zo"   title="Banquina / Zócalo"   modules={ZO}   onCardClick={onModuleClick} />
       <Section id="bm"   title="Bajo Mesada"         modules={BM}   onCardClick={onModuleClick} />
-      <Section id="ala"  title="Alacenas"            modules={ALA}  onCardClick={onModuleClick} />
-      <Section id="alap" title="Alacenas Puente"     modules={ALAP} onCardClick={onModuleClick} />
+      <Section id="ala"  title="Alacenas (Prof. 35 Cm)"            modules={ALA}  onCardClick={onModuleClick} />
+      <Section id="alap" title="Alacenas Puente (Prof. 58 Cm)"     modules={ALAP} onCardClick={onModuleClick} />
       <Section id="esp"  title="Especiales"          modules={ESP}  onCardClick={onModuleClick} />
       <Section id="ele"  title="Electro"             modules={ELE}  onCardClick={onModuleClick} />
     </aside>

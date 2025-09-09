@@ -186,4 +186,13 @@
   margin-top: 12px;
 }
 
+.app-footer__tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+}
+
 
