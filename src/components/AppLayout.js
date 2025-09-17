@@ -119,6 +119,8 @@ function AppLayoutInner() {
   const [summaries, setSummaries] = useState({});
   const [breakdowns, setBreakdowns] = useState({});
 
+  const { modules: catalogModules } = useModules();
+
   const handleModulesChange = useCallback(
     (wallId, mods) => {
       setModulesByWall((prev) => ({ ...prev, [wallId]: mods }));
@@ -130,14 +132,14 @@ function AppLayoutInner() {
       }, {});
       setSummaries((prev) => ({ ...prev, [wallId]: byTitle }));
 
-      const byTypeMeta = new Map(catalog.map((c) => [c.type, c]));
+      const byTypeMeta = new Map(catalogModules.map((c) => [c.type, c]));
       const groups = new Map();
       const instances = [];
 
       const getDeltaPct = (meta, m) => {
         if (typeof m.priceDeltaPct === 'number') return m.priceDeltaPct;
         const sizes = Array.isArray(meta?.sizes) ? meta.sizes : [];
-               const found = sizes.find(
+        const found = sizes.find(
           (s) => Number(s.width) === Number(m.width) && Number(s.height) === Number(m.height)
         );
         return typeof found?.deltaPct === 'number' ? found.deltaPct : 0;
@@ -179,7 +181,7 @@ function AppLayoutInner() {
         type: g.type,
         title: g.title,
         count: g.count,
-        unit: g.units.size === 1 ? Number([...g.units][0]) : null,
+        unit: g.unit || (g.units.size === 1 ? Number([...g.units][0]) : null),
         subtotal: g.subtotal,
       }));
 
@@ -190,7 +192,7 @@ function AppLayoutInner() {
         [wallId]: { items, total, instances },
       }));
     },
-    [catalog, priceKey]
+    [catalogModules, priceKey]
   );
 
   const activeSummary   = summaries[activeWallId]   || {};
@@ -288,7 +290,7 @@ function AppLayoutInner() {
     ref?.current?.placeModuleFromSidebar?.(meta);
   }, [activeWallId]);
 
-  /* ------------ NUEVO: refs a los contenedores del Canvas ------------ */
+  /* ------------ Refs a contenedores del Canvas ------------ */
   const canvasContainerRefs = useRef({});
   const getCanvasContainerRef = useCallback((id) => {
     if (!canvasContainerRefs.current[id]) canvasContainerRefs.current[id] = React.createRef();
@@ -304,13 +306,66 @@ function AppLayoutInner() {
       modulesByWall,
       quality,
       kitchenType,
-      catalog, // incluye aiHints/row desde tu catálogo
+      catalog, // incluye aiHints/row desde catálogo
     });
     setRenderJSON(JSON.stringify(payload, null, 2));
     setRenderOpen(true);
   };
 
-  /* ------------ Render (OpenAI) con modal de resultado ------------ */
+  /* ------------ Captura robusta del Canvas (SIN TEXTOS) ------------ */
+  const captureNodeAsPng = useCallback(async (node, { includeGrid = false, includeTags = false, scale = 3 } = {}) => {
+    if (!node) throw new Error('captureNodeAsPng: missing node');
+    try {
+      const dataUrl = await htmlToImage.toPng(node, {
+        pixelRatio: Math.max(1, Number(scale) || 1),     // Hi-DPI
+        backgroundColor: '#ffffff',
+        cacheBust: true,
+        skipFonts: true,
+        style: { animation: 'none', transition: 'none' },
+        filter: (el) => {
+          const cls  = el?.classList;
+          const name = (el?.nodeName || '').toLowerCase();
+          if (!includeGrid && cls?.contains?.('grid-mesh')) return false;
+          if (!includeTags) {
+            if (cls?.contains?.('ai-tag') || cls?.contains?.('aitag-label') || cls?.contains?.('aitag-marker')) return false;
+            if (name === 'text') return false; // oculta cotas/rótulos SVG
+          }
+          return true;
+        },
+      });
+      return dataUrl;
+    } catch (e) {
+      console.warn('[capture] html-to-image falló, usando html2canvas', e);
+    }
+
+    const html2canvas = (await import('html2canvas')).default;
+
+    const restores = [];
+    if (!includeGrid) {
+      node.querySelectorAll('.grid-mesh').forEach((el) => {
+        const prev = el.style.display; el.style.display = 'none';
+        restores.push(() => { el.style.display = prev; });
+      });
+    }
+    if (!includeTags) {
+      node.querySelectorAll('.ai-tag, .aitag-label, .aitag-marker, svg text').forEach((el) => {
+        const prev = el.style.display; el.style.display = 'none';
+        restores.push(() => { el.style.display = prev; });
+      });
+    }
+
+    const canvas = await html2canvas(node, {
+      backgroundColor: '#ffffff',
+      scale: Math.max(1, Number(scale) || 1),
+      useCORS: true,
+      logging: false,
+    });
+
+    restores.forEach((fn) => fn());
+    return canvas.toDataURL('image/png');
+  }, []);
+
+  /* ------------ Render (OpenAI single) ------------ */
   const [isRendering, setIsRendering] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [resultUrl, setResultUrl] = useState(null);
@@ -366,31 +421,7 @@ function AppLayoutInner() {
     }
   }, [activeWall, modulesByWall, quality, kitchenType, catalog]);
 
-  /* ------------ Helper de captura robusta (silencia CSS remotos) ------------ */
-  async function captureNodeAsPng(node) {
-    try {
-      const dataUrl = await htmlToImage.toPng(node, {
-        pixelRatio: 1,               // liviano y suficiente
-        backgroundColor: '#ffffff',
-        cacheBust: true,
-        skipFonts: true,             // evita leer CSS de fuentes remotas (CORS)
-        style: { animation: 'none', transition: 'none' }, // sin animaciones en el clon
-      });
-      return dataUrl;
-    } catch (e) {
-      console.warn('[capture] html-to-image falló, usando html2canvas', e);
-    }
-    const html2canvas = (await import('html2canvas')).default;
-    const canvas = await html2canvas(node, {
-      backgroundColor: '#ffffff',
-      scale: 1,
-      useCORS: true,
-      logging: false,
-    });
-    return canvas.toDataURL('image/png');
-  }
-
-  /* ------------ Render (Gemini) capturando SOLO el Canvas ------------ */
+  /* ------------ Render (Gemini single) ------------ */
   const handleRenderGemini = useCallback(async () => {
     try {
       setIsRendering(true);
@@ -409,8 +440,7 @@ function AppLayoutInner() {
         return;
       }
 
-      // Captura robusta
-      const dataUrl = await captureNodeAsPng(containerEl);
+      const dataUrl = await captureNodeAsPng(containerEl, { includeGrid: false, includeTags: false, scale: 3 });
 
       const resp = await fetch(`${API_BASE_URL}/render/photo.gemini.raw?size=1024x1024`, {
         method: 'POST',
@@ -434,13 +464,13 @@ function AppLayoutInner() {
     } finally {
       setIsRendering(false);
     }
-  }, [activeWall, activeWallId, modulesByWall, quality, kitchenType, catalog]);
+  }, [activeWall, activeWallId, modulesByWall, quality, kitchenType, catalog, captureNodeAsPng]);
 
+  /* ------------ Render (Gemini multi-pared) ------------ */
   const handleRenderGeminiMulti = useCallback(async () => {
     try {
       setIsRendering(true);
 
-      // armamos payload multi-pared
       const payload = {
         kitchenType,
         walls: wallsState,
@@ -448,19 +478,17 @@ function AppLayoutInner() {
         quality,
       };
 
-      // orden sugerido por tipo
       const order = kitchenType === 'L'
         ? ['left','right']
         : kitchenType === 'C'
         ? ['left','front','right']
         : [activeWallId];
 
-      // capturamos todas las paredes que existan
       const dataUrls = [];
       for (const wallId of order) {
-        const ref = canvasContainerRefs.current[wallId]?.current;
-        if (!ref) continue;
-        const dataUrl = await captureNodeAsPng(ref);
+        const containerEl = canvasContainerRefs.current[wallId]?.current;
+        if (!containerEl) continue;
+        const dataUrl = await captureNodeAsPng(containerEl, { includeGrid: false, includeTags: false, scale: 3 });
         dataUrls.push(dataUrl);
       }
       if (!dataUrls.length) {
@@ -490,8 +518,79 @@ function AppLayoutInner() {
     } finally {
       setIsRendering(false);
     }
-  }, [kitchenType, wallsState, modulesByWall, quality, activeWallId]);
+  }, [kitchenType, wallsState, modulesByWall, quality, activeWallId, captureNodeAsPng]);
 
+  /* ------------ BEST-OF-3 (Gemini) ------------ */
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryUrls, setGalleryUrls] = useState([]);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+
+  const closeGallery = () => {
+    galleryUrls.forEach((u) => URL.revokeObjectURL(u));
+    setGalleryUrls([]);
+    setSelectedIdx(0);
+    setGalleryOpen(false);
+  };
+
+  const downloadSelectedFromGallery = () => {
+    const url = galleryUrls[selectedIdx];
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `render-${Date.now()}-bestof3.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const handleRenderGeminiBestOf3 = useCallback(async () => {
+    try {
+      setIsRendering(true);
+
+      const payload = buildRenderPayload({
+        activeWall,
+        modulesByWall,
+        quality,
+        kitchenType,
+        catalog,
+      });
+
+      const containerEl = canvasContainerRefs.current[activeWallId]?.current;
+      if (!containerEl) {
+        alert('No se encontró el canvas activo para capturar.');
+        return;
+      }
+      const dataUrl = await captureNodeAsPng(containerEl, { includeGrid: false, includeTags: false, scale: 3 });
+
+      const makeReq = async () => {
+        const r = await fetch(`${API_BASE_URL}/render/photo.gemini.raw?size=1024x1024`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload, imageDataUrl: dataUrl }),
+        });
+        if (!r.ok) throw new Error(await r.text().catch(() => 'Bad response'));
+        return r.blob();
+      };
+
+      const results = await Promise.allSettled([makeReq(), makeReq(), makeReq()]);
+      const blobs = results
+        .map((r) => (r.status === 'fulfilled' ? r.value : null))
+        .filter(Boolean);
+      if (!blobs.length) {
+        alert('No se pudieron generar renders.');
+        return;
+      }
+      const urls = blobs.map((b) => URL.createObjectURL(b));
+      setGalleryUrls(urls);
+      setSelectedIdx(0);
+      setGalleryOpen(true);
+    } catch (err) {
+      console.error('Gemini best-of-3 error', err);
+      alert('No se pudo generar el best-of-3.');
+    } finally {
+      setIsRendering(false);
+    }
+  }, [activeWall, activeWallId, modulesByWall, quality, kitchenType, catalog, captureNodeAsPng]);
 
   return (
     <div className="app">
@@ -544,7 +643,6 @@ function AppLayoutInner() {
               </div>
 
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                {/* Render texto-only (OpenAI) */}
                 <button className="btn primary" onClick={handleRenderOpenAI} disabled={isRendering}>
                   {isRendering ? 'Renderizando…' : 'Render (OpenAI 1024)'}
                 </button>
@@ -555,27 +653,27 @@ function AppLayoutInner() {
                   </button>
                 )}
 
-
-                {/* NUEVO: captura Canvas + texto (Gemini) */}
                 {kitchenType === 'Recta' && (
-                <button className="btn outline" onClick={handleRenderGemini} disabled={isRendering}>
-                  {isRendering ? 'Renderizando…' : 'Render (Gemini 1024)'}
-                </button>
+                  <>
+                    <button className="btn outline" onClick={handleRenderGemini} disabled={isRendering}>
+                      {isRendering ? 'Renderizando…' : 'Render (Gemini 1024)'}
+                    </button>
+                    <button className="btn outline" onClick={handleRenderGeminiBestOf3} disabled={isRendering}>
+                      {isRendering ? 'Renderizando…' : 'Render (Gemini ×3)'}
+                    </button>
+                  </>
                 )}
 
-                {/* Ver JSON del payload */}
                 <button className="btn outline" onClick={handlePrepareRender}>
                   Ver payload
                 </button>
 
-                {/* Solo logueado: Mis proyectos */}
                 {user && (
                   <button className="btn outline" onClick={() => setProjectsOpen(true)}>
                     Mis proyectos
                   </button>
                 )}
 
-                {/* Exportar PDF: sólo logueado */}
                 {user ? (
                   <PdfExportButton
                     canvasRef={canvasWrapRef}
@@ -612,7 +710,7 @@ function AppLayoutInner() {
               {walls.map((w) => (
                 <div
                   key={`${w.id}:${canvasVersion}`}
-                  ref={getCanvasContainerRef(w.id)}   // contenedor exacto del Canvas
+                  ref={getCanvasContainerRef(w.id)}
                   style={{ display: w.id === activeWallId ? 'block' : 'none' }}
                 >
                   <Canvas
@@ -626,6 +724,7 @@ function AppLayoutInner() {
                 </div>
               ))}
             </div>
+
             <hr />
             <span className="app__center">Consejito: Usá un lienzo amplio y ajustá las paredes al final</span>
             <div className="wall-dimensions">
@@ -654,7 +753,7 @@ function AppLayoutInner() {
         </div>
       </div>
 
-      {showQualityPicker && (
+      {!quality && (
         <QualityPicker defaultValue={quality || 'premium'} onSelect={(q) => setQuality(q)} />
       )}
 
@@ -711,7 +810,7 @@ function AppLayoutInner() {
         </div>
       )}
 
-      {/* -------- Modal del resultado (PNG) -------- */}
+      {/* -------- Modal del resultado (PNG individual) -------- */}
       {resultOpen && (
         <div
           style={{
@@ -747,10 +846,71 @@ function AppLayoutInner() {
         </div>
       )}
 
-      {/* mini keyframes para el spinner */}
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+      {/* -------- Modal Best-of-3 -------- */}
+      {galleryOpen && (
+        <div
+          style={{
+            position:'fixed', inset:0, background:'rgba(0,0,0,.55)',
+            display:'flex', alignItems:'center', justifyContent:'center', zIndex:1700
+          }}
+          onClick={closeGallery}
+        >
+          <div
+            style={{
+              width:'min(1200px,95vw)', maxHeight:'92vh', background:'#111',
+              borderRadius:12, padding:14, boxShadow:'0 12px 40px rgba(0,0,0,.5)',
+              display:'flex', flexDirection:'column', gap:10
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <strong style={{ color:'#fff' }}>Renders generados (elegí el más fiel)</strong>
+              <div style={{ flex:1 }} />
+              <button className="btn ghost" onClick={downloadSelectedFromGallery}>Descargar seleccionado</button>
+              <button className="btn" onClick={closeGallery}>Cerrar</button>
+            </div>
+
+            <div style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(3, 1fr)',
+              gap:14,
+              overflow:'auto',
+              paddingBottom:6
+            }}>
+              {galleryUrls.map((u, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setSelectedIdx(idx)}
+                  style={{
+                    borderRadius:10,
+                    border: idx === selectedIdx ? '3px solid #09f' : '2px solid #333',
+                    background:'#000',
+                    cursor:'pointer',
+                    display:'flex',
+                    flexDirection:'column',
+                    overflow:'hidden'
+                  }}
+                >
+                  <div style={{ padding:8, background:'#000' }}>
+                    <img src={u} alt={`opción-${idx+1}`} style={{ width:'100%', height:'auto', display:'block' }} />
+                  </div>
+                  <div style={{
+                    textAlign:'center',
+                    color:'#ddd',
+                    fontSize:14,
+                    padding:'6px 8px',
+                    background: idx === selectedIdx ? '#0b2742' : '#181818'
+                  }}>
+                    {idx === selectedIdx ? 'Seleccionado' : 'Elegir'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

@@ -1,8 +1,12 @@
+// modules.js — con aiTag (para overlay) y ai (metadata estructurada)
 
 const modules = [
-  //Zocalos
+  /* =========================
+     ZÓCALOS / BANQUINA
+     ========================= */
   {
     type: "BANQUINA-800-150",
+    aiTag: "BANQ",
     title: "Banquina",
     subtitle: "10 / 12 / 15 cm",
     section: "ZO",
@@ -14,16 +18,19 @@ const modules = [
     allowedHeights: [10, 12, 15],
     defaultLinearWidth: 80,
     row: "base",
+    ai: { row: "base", shape: "linear-skirting", open: false, doors: 0, drawers: 0 },
     aiHints: {
-      common: "banquina visible, continuidad visual con zócalo; color y material a juego con base"
-    }
+      common:
+        "banquina/zócalo visible alineado, línea continua; mismo acabado que frentes",
+    },
   },
   {
     type: "ZOCALO-800-150",
-    title: "Zocalo",
+    aiTag: "ZO-ALU",
+    title: "Zócalo",
     subtitle: "10 / 12 / 15 cm",
     section: "ZO",
-    sectionLabel: "ZOCALO ALUMINIO",
+    sectionLabel: "ZÓCALO ALUMINIO",
     width: 80,
     height: 15,
     src: "/assets/modules/zocalo/ZOCALO-800-150.png",
@@ -31,14 +38,19 @@ const modules = [
     allowedHeights: [10, 12, 15],
     defaultLinearWidth: 80,
     row: "base",
+    ai: { row: "base", shape: "linear-skirting", open: false, doors: 0, drawers: 0 },
     aiHints: {
-      common: "zócalo aluminio simple, línea horizontal limpia, sin cortes visibles al frente"
-    }
+      common:
+        "zócalo aluminio simple, línea horizontal continua sin cortes al frente",
+    },
   },
 
-  //Bajo Mesadas
-    {
+  /* =========================
+     BAJO MESADA
+     ========================= */
+  {
     type: "bm2p",
+    aiTag: "BM-2P",
     title: "BM 2 Puertas",
     subtitle: "1 Estante",
     section: "BM",
@@ -47,14 +59,25 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/bm2p.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-doors",
+      doors: 2,
+      drawers: 0,
+      open: false,
+      orientation: "vertical",
+    },
     aiHints: {
-      started: "mueble bajo dos puertas, tiradores rectos simples",
-      premium: "mueble bajo dos puertas, acabado mate, tiradores integrados de aluminio tipo J",
-      deluxe:  "mueble bajo dos puertas sin tiradores (push-open o uña J), frentes lisos"
-    }
+      common:
+        "bajo mesada de 2 PUERTAS VERTICALES; una junta vertical. NO líneas horizontales.",
+      started: "tiradores rectos visibles",
+      premium: "sin tiradores; perfil gola / uñero J continuo",
+      deluxe: "sin tiradores; gola oculta o uñero J minimal",
+    },
   },
   {
     type: "bm1pi",
+    aiTag: "BM-1PI",
     title: "BM 1 Puerta Izq",
     subtitle: "1 Estante",
     section: "BM",
@@ -63,15 +86,26 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/bm1pi.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-doors",
+      doors: 1,
+      drawers: 0,
+      open: false,
+      orientation: "vertical",
+      hinge: "left",
+    },
     aiHints: {
-      common: "mueble bajo una puerta, apertura a izquierda; frente liso",
-      started: "mueble bajo una puerta, tirador rectos simples",
-      premium: "mueble bajo una puerta, acabado mate, tirador integrados de aluminio tipo J",
-      deluxe:  "mueble bajo una puerta sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "bajo mesada de 1 PUERTA VERTICAL (bisagra izquierda). Frente liso.",
+      started: "tirador recto visible",
+      premium: "sin tirador; perfil gola / uñero J",
+      deluxe: "sin tirador; gola oculta",
+    },
   },
   {
     type: "bm1pd",
+    aiTag: "BM-1PD",
     title: "BM 1 Puerta Der",
     subtitle: "1 Estante",
     section: "BM",
@@ -80,16 +114,26 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/bm1pd.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-doors",
+      doors: 1,
+      drawers: 0,
+      open: false,
+      orientation: "vertical",
+      hinge: "right",
+    },
     aiHints: {
-      common: "mueble bajo una puerta, apertura a derecha; frente liso",
-      started: "mueble bajo una puerta, tirador rectos simples",
-      premium: "mueble bajo una puerta, acabado mate, tirador integrados de aluminio tipo J",
-      deluxe:  "mueble bajo una puerta sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "bajo mesada de 1 PUERTA VERTICAL (bisagra derecha). Frente liso.",
+      started: "tirador recto visible",
+      premium: "sin tirador; perfil gola / uñero J",
+      deluxe: "sin tirador; gola oculta",
+    },
   },
-  
   {
     type: "2-drawer-cabinet",
+    aiTag: "BM-2DR",
     title: "BM Cajonero",
     subtitle: "2 Cajones",
     section: "BM",
@@ -98,15 +142,25 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/2-drawer-cabinet.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-drawers",
+      doors: 0,
+      drawers: 2,
+      open: false,
+      orientation: "horizontal",
+    },
     aiHints: {
-      common: "cajonera de dos cajones amplios; líneas horizontales marcadas",
-      started: "mueble bajo dos cajones, tirador rectos simples",
-      premium: "mueble bajo dos cajones, acabado mate, tiradores integrados de aluminio tipo J",
-      deluxe:  "mueble bajo dos cajones, sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "cajonera EXACTAMENTE 2 cajones (2 líneas horizontales visibles).",
+      started: "tiradores rectos visibles",
+      premium: "sin tiradores; gola / uñero J",
+      deluxe: "sin tiradores; gola oculta",
+    },
   },
   {
     type: "3-drawer-cabinet",
+    aiTag: "BM-3DR",
     title: "BM Cajonero",
     subtitle: "3 Cajones Opc. 1",
     section: "BM",
@@ -115,15 +169,25 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/3-drawer-cabinet.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-drawers",
+      doors: 0,
+      drawers: 3,
+      open: false,
+      orientation: "horizontal",
+    },
     aiHints: {
-      common: "cajonera tres cajones; los superiores más bajo, el inferior mas profundo",
-      started: "mueble bajo tres cajones, tirador rectos simples",
-      premium: "mueble bajo tres cajones, acabado mate, tiradores integrados de aluminio tipo J",
-      deluxe:  "mueble bajo tres cajones, sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "cajonera EXACTAMENTE 3 cajones (superior más bajo). No convertir en puertas.",
+      started: "tiradores rectos",
+      premium: "sin tiradores; gola / uñero J",
+      deluxe: "sin tiradores; gola oculta",
+    },
   },
   {
     type: "3-drawer-cabinet2",
+    aiTag: "BM-3DR",
     title: "BM Cajonero",
     subtitle: "3 Cajones Opc. 2",
     section: "BM",
@@ -132,15 +196,25 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/3-drawer-cabinet2.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-drawers",
+      doors: 0,
+      drawers: 3,
+      open: false,
+      orientation: "horizontal",
+    },
     aiHints: {
-      common: "cajonera tres cajones; el superior más bajo, los inferiores mas profundo",
-      started: "mueble bajo tres cajones, tirador rectos simples",
-      premium: "mueble bajo tres cajones, acabado mate, tiradores integrados de aluminio tipo J",
-      deluxe:  "mueble bajo tres cajones, sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "cajonera EXACTAMENTE 3 cajones (variación). Mantener 3 líneas horizontales.",
+      started: "tiradores rectos",
+      premium: "sin tiradores; gola / uñero J",
+      deluxe: "sin tiradores; gola oculta",
+    },
   },
   {
     type: "BM-oven",
+    aiTag: "HORNO",
     title: "BM Horno",
     subtitle: "Horno Empotrado",
     section: "BM",
@@ -149,29 +223,35 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/BM-oven.png",
     row: "base",
+    ai: { row: "base", shape: "base-oven", doors: 0, drawers: 0, open: false },
     aiHints: {
-      common: "horno empotrado bajo mesada, frente de vidrio negro con marco de acero"
-    }
+      common:
+        "HORNO empotrado bajo mesada; frente vidrio/acero. No sustituir por cajones.",
+    },
   },
   {
     type: "BM-trash-can",
+    aiTag: "BM-TRASH",
     title: "BM Residuos",
-    subtitle: "Cesto de residuos integrad0",
+    subtitle: "Cesto de residuos integrado",
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 40,
     height: 78,
     src: "/assets/modules/bajo-mesada/BM-trash-can.png",
     row: "base",
+    ai: { row: "base", shape: "base-drawer", doors: 0, drawers: 1, open: false },
     aiHints: {
-      common: "una puerta con apertura tipo cajón",
-      started: "mueble bajo una puerta, tirador rectos simples",
-      premium: "mueble bajo una puerta, acabado mate, tiradores integrados de aluminio tipo J",
-      deluxe:  "mueble bajo una puerta, sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "módulo de residuos tipo cajón. Mostrar frente liso, no el cesto.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
   },
   {
     type: "spice-rack",
+    aiTag: "SPICE",
     title: "BM Especiero Cajón",
     subtitle: "20 x 90 cm",
     section: "BM",
@@ -180,15 +260,18 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/spice-rack.png",
     row: "base",
+    ai: { row: "base", shape: "base-drawer", doors: 0, drawers: 1, open: false },
     aiHints: {
-      common: "mueble bajo una puerta con apertura tipo cajón",
-      started: "mueble bajo una puerta, tirador rectos simples",
-      premium: "mueble bajo una puerta, acabado mate, tiradores integrados de aluminio tipo J",
-      deluxe:  "mueble bajo una puerta, sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "especiero tipo cajón angosto. No convertir en puerta.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
   },
   {
     type: "storekeeper",
+    aiTag: "BODEGA",
     title: "BM Bodeguero",
     subtitle: "6 Vinos - 15 x 90 cm",
     section: "BM",
@@ -197,50 +280,189 @@ const modules = [
     height: 78,
     src: "/assets/modules/bajo-mesada/storekeeper.png",
     row: "base",
+    ai: { row: "base", shape: "base-open", open: true, doors: 0, drawers: 0 },
     aiHints: {
-      common: "mueble bajo bodeguero para guardar seis vinos, abierto sin puertas",
-      started: "mueble bajo una puerta, tirador rectos simples",
-      premium: "mueble bajo una puerta, acabado mate, tiradores integrados de aluminio tipo J",
-      deluxe:  "mueble bajo una puerta, sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "bodeguero ABIERTO (rejilla/compartimentos). Sin puertas.",
+    },
   },
+
+  // Esquineros (derecha/izquierda)
   {
     type: "BM-ESQ-1",
+    aiTag: "BM-ESQ-D40",
     title: "BM Esquinero",
-    subtitle: "Esquinero derecho",
+    subtitle: "Esquinero derecho, Puerta de 40 cm",
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 100,
     height: 78,
-    src: "/assets/modules/especiales/BM-ESQ-1.png",
+    src: "/assets/modules/bajo-mesada/BMRI-P400-Z.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-corner",
+      corner: true,
+      cornerSide: "right",
+      doors: 1,
+      doorCm: 40,
+      open: false,
+    },
     aiHints: {
-      common: "mueble bajo esquinero derecho con una puerta en vertical, apertura a la izquierda",
-      started: "mueble bajo de una puerta, melamina blanca, tirador simple",
-      premium: "mueble bajo puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "mueble bajo dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "esquinero BAJO derecho; 1 puerta vertical 40 cm, bisagras derecha. Volumen ciego hacia otra pared.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
   },
   {
     type: "BM-ESQ-2",
+    aiTag: "BM-ESQ-D50",
     title: "BM Esquinero",
-    subtitle: "Esquinero izquierdo",
+    subtitle: "Esquinero derecho, Puerta de 50 cm",
     section: "BM",
     sectionLabel: "BAJO MESADA",
     width: 100,
     height: 78,
-    src: "/assets/modules/especiales/BM-ESQ-2.png",
+    src: "/assets/modules/bajo-mesada/BMRI-P500-Z.png",
     row: "base",
+    ai: {
+      row: "base",
+      shape: "base-corner",
+      corner: true,
+      cornerSide: "right",
+      doors: 1,
+      doorCm: 50,
+      open: false,
+    },
     aiHints: {
-      common: "mueble bajo esquinero derecho con una puerta en vertical, apertura a la derecha",
-      started: "mueble bajo de una puerta, melamina blanca, tirador simple",
-      premium: "mueble bajo puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "mueble bajo dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "esquinero BAJO derecho; 1 puerta vertical 50 cm, bisagras derecha. Volumen ciego hacia otra pared.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
   },
-  //Alacenas
+  {
+    type: "BM-ESQ-3",
+    aiTag: "BM-ESQ-D60",
+    title: "BM Esquinero",
+    subtitle: "Esquinero derecho, Puerta de 60 cm",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 100,
+    height: 78,
+    src: "/assets/modules/bajo-mesada/BMRI-P600-Z.png",
+    row: "base",
+    ai: {
+      row: "base",
+      shape: "base-corner",
+      corner: true,
+      cornerSide: "right",
+      doors: 1,
+      doorCm: 60,
+      open: false,
+    },
+    aiHints: {
+      common:
+        "esquinero BAJO derecho; 1 puerta vertical 60 cm. Volumen ciego hacia otra pared.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
+  },
+  {
+    type: "BM-ESQ-1I",
+    aiTag: "BM-ESQ-I40",
+    title: "BM Esquinero",
+    subtitle: "Esquinero izquierdo, Puerta de 40 cm",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 100,
+    height: 78,
+    src: "/assets/modules/bajo-mesada/BMRD-P400-SZ.png",
+    row: "base",
+    ai: {
+      row: "base",
+      shape: "base-corner",
+      corner: true,
+      cornerSide: "left",
+      doors: 1,
+      doorCm: 40,
+      open: false,
+    },
+    aiHints: {
+      common:
+        "esquinero BAJO izquierdo; 1 puerta vertical 40 cm, bisagras izquierda.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
+  },
+  {
+    type: "BM-ESQ-2I",
+    aiTag: "BM-ESQ-I50",
+    title: "BM Esquinero",
+    subtitle: "Esquinero izquierdo, Puerta de 50 cm",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 100,
+    height: 78,
+    src: "/assets/modules/bajo-mesada/BMRD-P500-SZ.png",
+    row: "base",
+    ai: {
+      row: "base",
+      shape: "base-corner",
+      corner: true,
+      cornerSide: "left",
+      doors: 1,
+      doorCm: 50,
+      open: false,
+    },
+    aiHints: {
+      common:
+        "esquinero BAJO izquierdo; 1 puerta vertical 50 cm, bisagras izquierda.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
+  },
+  {
+    type: "BM-ESQ-3I",
+    aiTag: "BM-ESQ-I60",
+    title: "BM Esquinero",
+    subtitle: "Esquinero izquierda, Puerta de 60 cm",
+    section: "BM",
+    sectionLabel: "BAJO MESADA",
+    width: 100,
+    height: 78,
+    src: "/assets/modules/bajo-mesada/BMRD-P600-SZ.png",
+    row: "base",
+    ai: {
+      row: "base",
+      shape: "base-corner",
+      corner: true,
+      cornerSide: "left",
+      doors: 1,
+      doorCm: 60,
+      open: false,
+    },
+    aiHints: {
+      common:
+        "esquinero BAJO izquierdo; 1 puerta vertical 60 cm, bisagras izquierda.",
+      started: "tirador visible",
+      premium: "sin tirador; gola",
+      deluxe: "sin tirador; gola oculta",
+    },
+  },
+
+  /* =========================
+     ALACENAS (SUPERIORES)
+     ========================= */
   {
     type: "Ala35-2P-v",
+    aiTag: "AL-2PV",
     title: "AL 2 Puertas",
     subtitle: "2 Puertas + Estante. Prof. 35 cm",
     section: "ALA",
@@ -249,15 +471,18 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacenas/Ala35-2P-v.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-doors", doors: 2, drawers: 0, open: false, orientation: "vertical" },
     aiHints: {
-      common: "alacena con puertas en vertical, profundidad 35 cm",
-      started: "alacena de dos puertas, melamina blanca, tiradores simples",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena superior 2 puertas VERTICALES (frente cerrado).",
+      started: "tiradores visibles",
+      premium: "sin tiradores; PUSH-OPEN",
+      deluxe: "sin tiradores; PUSH-OPEN",
+    },
   },
   {
     type: "Ala35-1PI",
+    aiTag: "AL-1PI",
     title: "AL 1 Puerta Izq",
     subtitle: "1 Puerta + Estante. Prof. 35 cm",
     section: "ALA",
@@ -266,16 +491,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacenas/Ala35-1PI.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-doors", doors: 1, drawers: 0, open: false, orientation: "vertical", hinge: "left" },
     aiHints: {
-      common: "alacena con puerta en vertical, profundidad 35 cm, apertura a izquierda",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena 1 puerta vertical (apertura izquierda), frente cerrado.",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "Ala35-1PD",
-    title: "AL 1 Puerta Izq",
+    aiTag: "AL-1PD",
+    title: "AL 1 Puerta Der",
     subtitle: "1 Puerta + Estante. Prof. 35 cm",
     section: "ALA",
     sectionLabel: "ALACENA",
@@ -283,16 +511,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacenas/Ala35-1PD.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-doors", doors: 1, drawers: 0, open: false, orientation: "vertical", hinge: "right" },
     aiHints: {
-      common: "alacena con puerta en vertical, profundidad 35 cm, apertura a la derecha",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena 1 puerta vertical (apertura derecha), frente cerrado.",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "AlaH35-2P",
-    title: "AL 2 Puertas",
+    aiTag: "AL-H-2P",
+    title: "AL 2 Puertas (Horizontal)",
     subtitle: "2 Puertas Horizontal +1 Estante. Prof. 35 cm",
     section: "ALA",
     sectionLabel: "ALACENA",
@@ -300,16 +531,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacenas/AlaH35-2P.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-doors", doors: 2, drawers: 0, open: false, orientation: "horizontal" },
     aiHints: {
-      common: "alacena con puertas en horizontal, profundidad 35 cm",
-      started: "alacena de dos puertas, melamina blanca, tiradores simples",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena superior de PUERTAS HORIZONTALES (alzada). No convertir a vertical.",
+      started: "tiradores visibles",
+      premium: "sin tiradores; PUSH-OPEN",
+      deluxe: "sin tiradores; PUSH-OPEN",
+    },
   },
   {
     type: "AlaH35-1P",
-    title: "AL 1 Puerta",
+    aiTag: "AL-H-1P",
+    title: "AL 1 Puerta (Horizontal)",
     subtitle: "1 Puerta Horizontal. Prof. 35 cm",
     section: "ALA",
     sectionLabel: "ALACENA",
@@ -317,16 +551,19 @@ const modules = [
     height: 30,
     src: "/assets/modules/alacenas/AlaH35-1P.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-doors", doors: 1, drawers: 0, open: false, orientation: "horizontal" },
     aiHints: {
-      common: "alacena con puerta en horizontal, profundidad 35 cm",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena 1 puerta HORIZONTAL abatible; frente cerrado.",
+      started: "tirador discreto",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "Ala-extra",
-    title: "AL 1 Puerta",
+    aiTag: "AL-EXT",
+    title: "AL 1 Puerta + Extractor",
     subtitle: "1 Puerta + Extractor. Prof. 35 cm",
     section: "ALA",
     sectionLabel: "ALACENA",
@@ -334,15 +571,18 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacenas/Ala-extra.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-extractor", doors: 1, drawers: 0, open: false, extractor: true },
     aiHints: {
-      common: "alacena con puerta en vertical, apertura a la derecha, extractor integrado en el inferior, profundidad 35 cm",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena 1 puerta vertical con EXTRACTOR oculto en el inferior; frente cerrado.",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "AlaH35-SP",
+    aiTag: "AL-SP",
     title: "AL Sin Puertas",
     subtitle: "1 Estante. Prof. 35 cm",
     section: "ALA",
@@ -351,12 +591,15 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacenas/AlaH35-SP.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-open", open: true, doors: 0, drawers: 0 },
     aiHints: {
-      common: "alacena sin puertas, un estante en horizontal en el medio, profundidad 35 cm",
-    }
+      common:
+        "alacena superior SIN PUERTAS; 1 estante horizontal visible.",
+    },
   },
   {
     type: "AlaH35-SP2",
+    aiTag: "AL-SP",
     title: "AL Sin Puerta",
     subtitle: "Prof. 35 cm",
     section: "ALA",
@@ -365,12 +608,14 @@ const modules = [
     height: 30,
     src: "/assets/modules/alacenas/AlaH35-SP2.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-open", open: true, doors: 0, drawers: 0 },
     aiHints: {
-      common: "alacena sin puertas, profundidad 35 cm",
-    }
+      common: "alacena superior SIN PUERTAS (abierta).",
+    },
   },
   {
     type: "Ala35Esq-400",
+    aiTag: "AL-ESQ-D",
     title: "AL Esquinero",
     subtitle: "1 Puerta Derecha, Prof. 35 cm",
     section: "ALA",
@@ -379,17 +624,23 @@ const modules = [
     height: 75,
     src: "/assets/modules/alacenas/AlaRD400.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-corner", corner: true, cornerSide: "right", doors: 1, open: false },
     aiHints: {
-      common: "alacena esquinera derecha con una puerta en vertical, apertura a la derecha, profundidad 35 cm",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena esquinera superior; 1 puerta vertical (apertura derecha).",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
-  //Alacenas Puente
+
+  /* =========================
+     ALACENAS PUENTE (58 cm)
+     ========================= */
   {
     type: "Ala60-2P-v",
-    title: "AL 2 Puertas",
+    aiTag: "AP-2PV",
+    title: "AL Puente 2 Puertas",
     subtitle: "2 Puertas + Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -397,16 +648,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacena-puente/Ala60-2P.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge", bridge: true, doors: 2, open: false, orientation: "vertical" },
     aiHints: {
-      common: "alacena estilo puente, con puertas en vertical, profundidad 58 cm",
-      started: "alacena de dos puertas, melamina blanca, tiradores simples",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "alacena tipo PUENTE con 2 puertas verticales (prof. 58).",
+      started: "tiradores visibles",
+      premium: "sin tiradores; PUSH-OPEN",
+      deluxe: "sin tiradores; PUSH-OPEN",
+    },
   },
   {
     type: "Ala60-1PD",
-    title: "AL 1 Puerta Der",
+    aiTag: "AP-1PD",
+    title: "AL Puente 1 Puerta Der",
     subtitle: "1 Puerta + Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -414,16 +668,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacena-puente/Ala60-1PD.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge", bridge: true, doors: 1, open: false, orientation: "vertical", hinge: "right" },
     aiHints: {
-      common: "alacena estilo puente con puerta en vertical, profundidad 58 cm, apertura a derecha",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "puente con 1 puerta vertical (apertura derecha), prof. 58.",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "Ala60-1PI",
-    title: "AL 1 Puerta Izq",
+    aiTag: "AP-1PI",
+    title: "AL Puente 1 Puerta Izq",
     subtitle: "1 Puerta + Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -431,16 +688,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacena-puente/Ala60-1PI.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge", bridge: true, doors: 1, open: false, orientation: "vertical", hinge: "left" },
     aiHints: {
-      common: "alacena estilo puente con puerta en vertical, profundidad 58 cm, apertura a izquierda",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "puente con 1 puerta vertical (apertura izquierda), prof. 58.",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "AlaH60-2P",
-    title: "AL 2 Puertas",
+    aiTag: "AP-H-2P",
+    title: "AL Puente 2 Puertas (Horizontal)",
     subtitle: "2 Puertas Horizontal +1 Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -448,16 +708,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacena-puente/AlaH60-2P.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge", bridge: true, doors: 2, open: false, orientation: "horizontal" },
     aiHints: {
-      common: "alacena estilo puente con puertas en horizontal, profundidad 58 cm",
-      started: "alacena de dos puertas, melamina blanca, tiradores simples",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "puente con puertas HORIZONTALES; prof. 58. No transformar a vertical.",
+      started: "tiradores visibles",
+      premium: "sin tiradores; PUSH-OPEN",
+      deluxe: "sin tiradores; PUSH-OPEN",
+    },
   },
   {
     type: "AlaH60-1P",
-    title: "AL 1 Puerta",
+    aiTag: "AP-H-1P",
+    title: "AL Puente 1 Puerta (Horizontal)",
     subtitle: "1 Puerta Horizontal. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -465,16 +728,19 @@ const modules = [
     height: 30,
     src: "/assets/modules/alacena-puente/AlaH60-1P.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge", bridge: true, doors: 1, open: false, orientation: "horizontal" },
     aiHints: {
-      common: "alacena estilo puente con puerta en horizontal, profundidad 58 cm",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "puente con 1 puerta HORIZONTAL abatible; prof. 58.",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "Ala-extra60",
-    title: "AL 1 Puerta",
+    aiTag: "AP-EXT",
+    title: "AL Puente + Extractor",
     subtitle: "1 Puerta + Extractor. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -482,16 +748,19 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacena-puente/Ala-extra60.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge-extractor", bridge: true, extractor: true, doors: 1, open: false },
     aiHints: {
-      common: "alacena estilo puente con puerta en vertical, apertura a la derecha, extractor integrado en el inferior, profundidad 58 cm",
-      started: "alacena de una puerta, melamina blanca, tirador simple",
-      premium: "alacena dos puertas sin tirador (push-open), frentes lisos",
-      deluxe:  "alacena dos puertas sin tirador (push-open), frentes lisos"
-    }
+      common:
+        "puente con 1 puerta vertical y EXTRACTOR oculto (prof. 58).",
+      started: "tirador visible",
+      premium: "sin tirador; PUSH-OPEN",
+      deluxe: "sin tirador; PUSH-OPEN",
+    },
   },
   {
     type: "AlaH60-SP",
-    title: "AL Sin Puertas",
+    aiTag: "AP-SP",
+    title: "AL Puente Sin Puertas",
     subtitle: "1 Estante. Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -499,13 +768,16 @@ const modules = [
     height: 60,
     src: "/assets/modules/alacena-puente/AlaH60-SP.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge-open", bridge: true, open: true, doors: 0, drawers: 0 },
     aiHints: {
-      common: "alacena estilo puente sin puertas, un estante en horizontal en el medio, profundidad 58 cm",
-    }
+      common:
+        "puente SIN PUERTAS; 1 estante horizontal visible (prof. 58).",
+    },
   },
   {
     type: "AlaH60-SP2",
-    title: "AL Sin Puerta",
+    aiTag: "AP-SP",
+    title: "AL Puente Sin Puerta",
     subtitle: "Prof. 58 cm",
     section: "ALAP",
     sectionLabel: "ALACENA PUENTE",
@@ -513,185 +785,216 @@ const modules = [
     height: 30,
     src: "/assets/modules/alacena-puente/AlaH60-SP2.png",
     row: "upper",
+    ai: { row: "upper", shape: "upper-bridge-open", bridge: true, open: true, doors: 0, drawers: 0 },
     aiHints: {
-      common: "alacena estilo puente sin puertas, profundidad 58 cm",
-    }
+      common: "puente SIN PUERTAS (prof. 58).",
+    },
   },
-  //Especiales
+
+  /* =========================
+     ESPECIALES (COLUMNAS)
+     ========================= */
   {
     type: "colum1",
+    aiTag: "COL-1",
     title: "AL Columna 1",
-    subtitle: "60 X 140 cm - 1 Cajón + Horno + Micro",
+    subtitle: "60 × 140 cm - 1 Cajón + Horno + Micro",
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
     height: 140,
     src: "/assets/modules/especiales/colum1.png",
     row: "tall",
+    ai: { row: "tall", shape: "tall-column", drawers: 1, oven: true, microwave: true },
     aiHints: {
-      common: "columna con un cajón, horno integrado, espacio abierto para microondas ",
-      started: "tirador rectos simples",
-      premium: "tiradores integrados de aluminio tipo J",
-      deluxe:  "sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "columna alta con 1 cajón inferior, horno y nicho microondas.",
+      started: "tiradores visibles",
+      premium: "sin tiradores (gola/push) según zona",
+      deluxe: "sin tiradores; al ras",
+    },
   },
   {
     type: "colum2",
+    aiTag: "COL-2",
     title: "AL Columna 2",
-    subtitle: "60 X 140 cm - 2 Cajones + Horno",
+    subtitle: "60 × 140 cm - 2 Cajones + Horno",
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
     height: 140,
     src: "/assets/modules/especiales/colum2.png",
     row: "tall",
+    ai: { row: "tall", shape: "tall-column", drawers: 2, oven: true },
     aiHints: {
-      common: "columna con dos cajones, horno integrado",
-      started: "tirador rectos simples",
-      premium: "tiradores integrados de aluminio tipo J",
-      deluxe:  "sin tirador (push-open o uña J), frentes lisos"
-    }
+      common: "columna alta con 2 cajones y horno.",
+      started: "tiradores visibles",
+      premium: "sin tiradores",
+      deluxe: "sin tiradores; al ras",
+    },
   },
   {
     type: "colum3",
+    aiTag: "COL-3",
     title: "AL Columna 3",
-    subtitle: "60 X 140 cm - 1 Puerta + 1 Estante + Horno",
+    subtitle: "60 × 140 cm - 1 Puerta + 1 Estante + Horno",
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
     height: 140,
     src: "/assets/modules/especiales/colum3.png",
     row: "tall",
+    ai: { row: "tall", shape: "tall-column", doors: 1, drawers: 0, oven: true, hinge: "left" },
     aiHints: {
-      common: "columna con una puerta de apertura a la izquierda, horno integrado",
-      started: "tirador rectos simples",
-      premium: "tiradores integrados de aluminio tipo J",
-      deluxe:  "sin tirador (push-open o uña J), frentes lisos"
-    }
+      common:
+        "columna con 1 puerta (apertura izquierda), estante y horno.",
+      started: "tiradores visibles",
+      premium: "sin tiradores",
+      deluxe: "sin tiradores; al ras",
+    },
   },
   {
     type: "colum4",
+    aiTag: "COL-4",
     title: "AL Columna 4",
-    subtitle: "60 X 140 cm - 1 Puerta Izquierda + 2 Estante",
+    subtitle: "60 × 140 cm - 1 Puerta Izquierda + 2 Estantes",
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
     height: 140,
     src: "/assets/modules/especiales/colum4.png",
     row: "tall",
+    ai: { row: "tall", shape: "tall-column", doors: 1, hinge: "left", shelves: 2 },
     aiHints: {
-      common: "columna despensa con una puerta de apertura a la izquierda",
-      started: "tirador rectos simples",
-      premium: "tiradores integrados de aluminio tipo J",
-      deluxe:  "sin tirador (push-open o uña J), frentes lisos"
-    }
+      common: "columna despensa con 1 puerta (izquierda) y 2 estantes.",
+      started: "tiradores visibles",
+      premium: "sin tiradores",
+      deluxe: "sin tiradores; al ras",
+    },
   },
   {
     type: "colum5",
+    aiTag: "COL-5",
     title: "AL Columna 5",
-    subtitle: "60 X 140 cm - 1 Puerta Derecha + 2 Estante",
+    subtitle: "60 × 140 cm - 1 Puerta Derecha + 2 Estantes",
     section: "ESP",
     sectionLabel: "ESPECIALES",
     width: 60,
     height: 140,
     src: "/assets/modules/especiales/colum5.png",
     row: "tall",
+    ai: { row: "tall", shape: "tall-column", doors: 1, hinge: "right", shelves: 2 },
     aiHints: {
-      common: "columna despensa con una puerta de apertura a la derecha",
-      started: "tirador rectos simples",
-      premium: "tiradores integrados de aluminio tipo J",
-      deluxe:  "sin tirador (push-open o uña J), frentes lisos"
-    }
+      common: "columna despensa con 1 puerta (derecha) y 2 estantes.",
+      started: "tiradores visibles",
+      premium: "sin tiradores",
+      deluxe: "sin tiradores; al ras",
+    },
   },
 
-  //Electro
+  /* =========================
+     ELECTRO
+     ========================= */
   {
     type: "fridge-right",
+    aiTag: "FRIDGE60",
     title: "Heladera 1",
-    subtitle: "60 x 180 cm",
+    subtitle: "60 × 180 cm",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 60,
     height: 180,
     src: "/assets/modules/electro/fridge-right.jpeg",
     row: "tall",
+    ai: { row: "tall", shape: "appliance-fridge", appliance: "fridge", open: false },
     aiHints: {
-      common: "heladera alta independiente, look acero; ubicar en posición según diseño"
-    }
+      common:
+        "heladera independiente (acero). NO colocar muebles encima salvo que estén listados.",
+    },
   },
   {
     type: "double-fridge-right",
+    aiTag: "FRIDGE-DBL",
     title: "Heladera 2",
-    subtitle: "91 x 178 cm",
+    subtitle: "91 × 178 cm",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 91,
     height: 178,
     src: "/assets/modules/electro/double-fridge-right.png",
     row: "tall",
+    ai: { row: "tall", shape: "appliance-fridge", appliance: "fridge-side-by-side", open: false },
     aiHints: {
-      common: "heladera alta independiente, de las de dos puestas anchas, look acero; ubicar en posición según diseño"
-    }
+      common:
+        "heladera side-by-side (dos puertas anchas). NO mueble superior salvo listado.",
+    },
   },
   {
     type: "built-in-range",
+    aiTag: "COC-HORNO",
     title: "Cocina-Horno",
-    subtitle: "60 x 94 cm",
+    subtitle: "60 × 105 cm",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 60,
     height: 105,
     src: "/assets/modules/electro/built-in-range.jpeg",
     row: "base",
+    ai: { row: "base", shape: "appliance-range", appliance: "range", open: false },
     aiHints: {
-      common: "cocina con horno integrada, cuatro hornallas, frente de acero sencillo"
-    }
+      common:
+        "cocina con horno (4 hornallas). Frente acero. No reemplazar por cajonera.",
+    },
   },
   {
     type: "microwave",
+    aiTag: "MICRO",
     title: "Microondas",
-    subtitle: "48 x 30 cm",
+    subtitle: "48 × 30 cm",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 48,
     height: 30,
     src: "/assets/modules/electro/microwave.jpeg",
     row: "upper",
+    ai: { row: "upper", shape: "appliance-micro", appliance: "microwave", open: false },
     aiHints: {
-      common: "horno electrico microondas, frente de acero sencillo"
-    }
+      common:
+        "microondas en estante/zona superior. Frente acero.",
+    },
   },
   {
     type: "washing-machine",
+    aiTag: "LAVAR",
     title: "Lavarropas",
-    subtitle: "60 x 90 cm",
+    subtitle: "60 × 85 cm",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 60,
     height: 85,
     src: "/assets/modules/electro/washing-machine.jpeg",
     row: "base",
+    ai: { row: "base", shape: "appliance-washer", appliance: "washing-machine", open: false },
     aiHints: {
-      common: "lavarropa, frente de acero sencillo"
-    }
+      common: "lavarropas bajo mesada.",
+    },
   },
   {
     type: "dishwasher",
+    aiTag: "LAVAV",
     title: "Lavavajillas",
-    subtitle: "60 x 90 cm",
+    subtitle: "60 × 85 cm",
     section: "ELECTRO",
     sectionLabel: "ELECTRO",
     width: 60,
     height: 85,
     src: "/assets/modules/electro/dishwasher.jpeg",
     row: "base",
+    ai: { row: "base", shape: "appliance-dishwasher", appliance: "dishwasher", open: false },
     aiHints: {
-      common: "secarropas, frente de acero sencillo"
-    }
+      common: "lavavajillas bajo mesada.",
+    },
   },
-
-
-
 ];
 
 export default modules;

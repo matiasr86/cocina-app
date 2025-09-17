@@ -1,4 +1,3 @@
-// src/components/Canvas.js
 import React, {
   useState,
   useRef,
@@ -29,6 +28,7 @@ function CanvasInner({
   const [sizePrompt, setSizePrompt] = useState(null);
   const [linearPrompt, setLinearPrompt] = useState(null);
   const [zoom, setZoom] = useState(1);
+  const [showGrid, setShowGrid] = useState(true); // toggle de grilla
   const canvasRef = useRef(null);
 
   // 1 m = 100 px
@@ -36,7 +36,7 @@ function CanvasInner({
   const pxH = initialHeight * 100;
 
   const clampZoom = (z) => Math.max(0.5, Math.min(2, z));
-  const incZoom   = (d) => setZoom((z) => clampZoom(+((z + d).toFixed(2))));
+  const incZoom   = useCallback((d) => setZoom((z) => clampZoom(+((z + d).toFixed(2)))), []);
   const resetZoom = () => setZoom(1);
 
   /* ------------ carga / persistencia ------------ */
@@ -54,7 +54,9 @@ function CanvasInner({
     try { localStorage.setItem(modulesKey(wallId), JSON.stringify(modules)); } catch {}
   }, [wallId, modules]);
 
-  useEffect(() => { onModulesChange?.(wallId, modules); }, [wallId, modules, onModulesChange]);
+  useEffect(() => {
+    onModulesChange?.(wallId, modules);
+  }, [wallId, modules, onModulesChange]);
 
   /* ------------ helpers de geometría ------------ */
   const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
@@ -92,6 +94,7 @@ function CanvasInner({
     if (hasPayload) e.preventDefault();
   }, []);
 
+  // Guarda aiTag + ai y mantiene todo lo existente
   const finalizeDrop = useCallback(
     (data, dropX, dropY, width, height) => {
       let adjPct = 0;
@@ -99,6 +102,10 @@ function CanvasInner({
         const found = data.sizes.find((s) => s.width === width && s.height === height);
         if (found && typeof found.deltaPct === 'number') adjPct = found.deltaPct;
       }
+
+      const tagBase = (data.aiTag || data.type || data.title || 'MOD').toString();
+      const aiTag   = tagBase.trim().toUpperCase().replace(/\s+/g, '-');
+
       const raw = {
         id: crypto.randomUUID(),
         type:  data.type,
@@ -110,6 +117,10 @@ function CanvasInner({
         adjPct,
         src:   data.src   || null,
         color: data.color || 'transparent',
+
+        // metadatos AI
+        aiTag,
+        ai: data.ai || null,
       };
       const proposed = sanitizeRect(raw);
       if (collides(proposed, null)) return;
@@ -296,7 +307,7 @@ function CanvasInner({
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, []);
+  }, [incZoom]);
 
   /* ------------ scrollbars condicionales ------------ */
   const canvasOverflow = zoom > 1.001 ? 'auto' : 'hidden';
@@ -322,27 +333,24 @@ function CanvasInner({
   const editorW = 230;
   const editorH = 170;
 
-  // ✅ Nuevo: acoplar SIEMPRE al costado opuesto del módulo (no lo tapa).
+  // Panel de edición: acoplar al costado
   const computeEditorPos = (m) => {
-    const mTop  = pxH - m.y - m.height;    // top real del módulo (sistema top-left)
+    const mTop  = pxH - m.y - m.height;
     const mLeft = AXIS_MARGIN + m.x;
     const mCenterX = mLeft + m.width / 2;
 
     const gridLeft  = AXIS_MARGIN;
     const gridRight = AXIS_MARGIN + pxW;
 
-    const preferRight = mCenterX < (gridLeft + pxW / 2); // módulo en mitad izquierda → panel a la derecha
+    const preferRight = mCenterX < (gridLeft + pxW / 2);
 
-    const leftDock  = 10;                            // sobre la zona del eje Y
-    const rightDock = gridRight - editorW - 10;      // pegado al borde derecho
+    const leftDock  = 10;
+    const rightDock = gridRight - editorW - 10;
 
     const maxTop = pxH - editorH - 6;
     const top    = Math.max(10, Math.min(mTop, maxTop));
 
-    return {
-      left: Math.max(10, preferRight ? rightDock : leftDock),
-      top
-    };
+    return { left: Math.max(10, preferRight ? rightDock : leftDock), top };
   };
 
   const editorPos = selectedModule
@@ -365,11 +373,21 @@ function CanvasInner({
       {/* Header */}
       <div style={{ padding: 10, fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>{label}</span>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <button className="btn ghost" onClick={() => incZoom(-0.1)}>−</button>
           <span style={{ minWidth: 48, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
           <button className="btn ghost" onClick={() => incZoom(+0.1)}>+</button>
           <button className="btn ghost" onClick={resetZoom}>100%</button>
+
+          {/* Toggle grilla */}
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 10 }}>
+            <input
+              type="checkbox"
+              checked={showGrid}
+              onChange={(e) => setShowGrid(e.target.checked)}
+            />
+            <span style={{ fontWeight: 400 }}>Mostrar grilla</span>
+          </label>
         </div>
       </div>
 
@@ -393,65 +411,101 @@ function CanvasInner({
             height={pxH + BOTTOM_MARGIN}
             style={{ display: 'block' }}
           >
-            {/* Cuadriculado */}
+            {/* Área de trabajo con traslación */}
             <g transform={`translate(${AXIS_MARGIN}, 0)`}>
               <rect width={pxW} height={pxH} fill="#dcdcdc" stroke="#ccc" />
-              {Array.from({ length: Math.floor(pxW / GRID_STEP) + 1 }, (_, i) => (
-                <line key={`v${i}`} x1={i * GRID_STEP} y1={0} x2={i * GRID_STEP} y2={pxH} stroke="#eee" />
-              ))}
-              {Array.from({ length: Math.floor(pxH / GRID_STEP) + 1 }, (_, i) => (
-                <line key={`h${i}`} x1={0} y1={i * GRID_STEP} x2={pxW} y2={i * GRID_STEP} stroke="#eee" />
-              ))}
+
+              {/* MALLA (solo esto se oculta en export) */}
+              <g className="grid-mesh" style={{ display: showGrid ? 'block' : 'none' }}>
+                {Array.from({ length: Math.floor(pxW / GRID_STEP) + 1 }, (_, i) => (
+                  <line key={`v${i}`} x1={i * GRID_STEP} y1={0} x2={i * GRID_STEP} y2={pxH} stroke="#eee" />
+                ))}
+                {Array.from({ length: Math.floor(pxH / GRID_STEP) + 1 }, (_, i) => (
+                  <line key={`h${i}`} x1={0} y1={i * GRID_STEP} x2={pxW} y2={i * GRID_STEP} stroke="#eee" />
+                ))}
+              </g>
+
+              {/* REGLAS / EJES (siempre visibles y exportables) */}
+              <g className="rulers">
+                {/* EJE X (abajo) */}
+                <line x1={0} y1={pxH} x2={pxW} y2={pxH} stroke="#999" />
+                {Array.from({ length: Math.floor(pxW / LABEL_STEP) + 1 }, (_, i) => {
+                  const x = i * LABEL_STEP;
+                  return (
+                    <g key={`xlab${i}`}>
+                      <line x1={x} y1={pxH} x2={x} y2={pxH + 6} stroke="#999" />
+                      <text x={x} y={pxH + 16} fontSize={10} textAnchor="middle" fill="#666">
+                        {i * 50} cm
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* EJE Y (izquierda) */}
+                <line x1={0} y1={0} x2={0} y2={pxH} stroke="#999" />
+                {Array.from({ length: Math.floor(pxH / LABEL_STEP) + 1 }, (_, i) => {
+                  const y = pxH - i * LABEL_STEP;
+                  return (
+                    <g key={`ylab${i}`}>
+                      <line x1={-6} y1={y} x2={0} y2={y} stroke="#999" />
+                      <text
+                        x={-8}
+                        y={y}
+                        fontSize={10}
+                        textAnchor="end"
+                        dominantBaseline="middle"
+                        fill="#666"
+                      >
+                        {i * 50} cm
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
             </g>
-
-            {/* EJE X */}
-            {Array.from({ length: Math.floor(pxW / LABEL_STEP) + 1 }, (_, i) => {
-              const x = AXIS_MARGIN + i * LABEL_STEP;
-              return (
-                <g key={`xlab${i}`}>
-                  <line x1={x} y1={pxH} x2={x} y2={pxH + 6} stroke="#999" />
-                  <text x={x} y={pxH + 16} fontSize={10} textAnchor="middle">
-                    {i * 50} cm
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* EJE Y */}
-            {Array.from({ length: Math.floor(pxH / LABEL_STEP) + 1 }, (_, i) => {
-              const y = pxH - i * LABEL_STEP;
-              return (
-                <g key={`ylab${i}`}>
-                  <line x1={AXIS_MARGIN - 6} y1={y} x2={AXIS_MARGIN} y2={y} stroke="#999" />
-                  <text
-                    x={AXIS_MARGIN - 8}
-                    y={y}
-                    fontSize={10}
-                    textAnchor="end"
-                    dominantBaseline="middle"
-                  >
-                    {i * 50} cm
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* ejes base */}
-            <line x1={AXIS_MARGIN} y1={0}   x2={AXIS_MARGIN} y2={pxH} stroke="#999" />
-            <line x1={AXIS_MARGIN} y1={pxH} x2={AXIS_MARGIN + pxW} y2={pxH} stroke="#999" />
           </svg>
 
-          {modules.map((mod) => (
-            <Module
-              key={mod.id}
-              module={mod}
-              selected={mod.id === selectedId}
-              onClick={(id) => setSelectedId(id)}
-              onUpdate={handleUpdateModule}
-              axisMargin={AXIS_MARGIN}
-              bottomMargin={BOTTOM_MARGIN}
-            />
-          ))}
+          {/* Render del módulo + overlay de aiTag */}
+          {modules.map((mod) => {
+            const left = AXIS_MARGIN + mod.x;
+            const top  = (pxH - mod.y - mod.height); // top real del bloque
+
+            return (
+              <React.Fragment key={mod.id}>
+                <Module
+                  module={mod}
+                  selected={mod.id === selectedId}
+                  onClick={(id) => setSelectedId(id)}
+                  onUpdate={handleUpdateModule}
+                  axisMargin={AXIS_MARGIN}
+                  bottomMargin={BOTTOM_MARGIN}
+                />
+
+                {(mod.aiTag || mod.title || mod.type) && (
+                  <div
+                    className="aitag-marker"   // 👈 para poder ocultarlo en la captura
+                    style={{
+                      position: 'absolute',
+                      left,
+                      top: top + 2,
+                      width: mod.width,
+                      textAlign: 'center',
+                      fontSize: 9,               // 8–10 px
+                      lineHeight: '10px',
+                      color: '#555',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.4,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                      zIndex: 50
+                    }}
+                  >
+                    {mod.aiTag || mod.title || mod.type}
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         {/* Panel edición */}

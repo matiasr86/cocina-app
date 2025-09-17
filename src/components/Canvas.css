@@ -21,7 +21,7 @@
 }
 
 .canvas-surface svg rect {
-  fill: #f0f0f0;         /* fondo más claro para mejor contraste */
+  fill: #b1b0b0;         /* fondo más claro para mejor contraste */
 }
 
 /* Si tus módulos tienen una clase .module o similar, marcá el borde */
