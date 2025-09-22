@@ -268,102 +268,104 @@ function AppLayoutInner() {
     }
   }, []);
 
-  /* ------------ Export PDF ------------ */
+  /* ------------ Captura robusta del Canvas (SIN textos) ------------ */
   const canvasWrapRef = useRef(null);
-  const brandName = 'Easy Kitchen Design';
-  const logoUrl = '/logo512.png';
-  const businessPhone = '3413289463';
-  const businessAddress = '';
-  const customerName  = user?.displayName || '';
-  const customerEmail = user?.email || '';
 
-  const showQualityPicker = !quality;
+  const captureNodeAsPng = useCallback(
+    async (node, { includeGrid = true, includeTags = false, scale = 2 } = {}) => {
+      if (!node) throw new Error('captureNodeAsPng: missing node');
 
-  /* ------------ CLICK-TO-PLACE: refs a cada Canvas ------------ */
-  const canvasRefs = useRef({});
-  const getCanvasRef = useCallback((id) => {
-    if (!canvasRefs.current[id]) canvasRefs.current[id] = React.createRef();
-    return canvasRefs.current[id];
-  }, []);
-  const handleSidebarModuleClick = useCallback((meta) => {
-    const ref = canvasRefs.current[activeWallId];
-    ref?.current?.placeModuleFromSidebar?.(meta);
-  }, [activeWallId]);
+      // “Des-ocultar” ancestros (y el propio nodo) si están ocultos
+      const patched = [];
+      let cur = node;
+      while (cur && cur !== document.body) {
+        const cs = getComputedStyle(cur);
+        const invisible =
+          cs.display === 'none' || cs.visibility === 'hidden' || cur.offsetWidth === 0 || cur.offsetHeight === 0;
 
-  /* ------------ Refs a contenedores del Canvas ------------ */
-  const canvasContainerRefs = useRef({});
-  const getCanvasContainerRef = useCallback((id) => {
-    if (!canvasContainerRefs.current[id]) canvasContainerRefs.current[id] = React.createRef();
-    return canvasContainerRefs.current[id];
-  }, []);
+        if (invisible) {
+          patched.push({
+            el: cur,
+            prev: {
+              position: cur.style.position,
+              left: cur.style.left,
+              top: cur.style.top,
+              display: cur.style.display,
+              opacity: cur.style.opacity,
+              pointerEvents: cur.style.pointerEvents,
+              zIndex: cur.style.zIndex,
+            },
+          });
+          Object.assign(cur.style, {
+            position: 'absolute',
+            left: '-10000px',
+            top: '0',
+            display: 'block',
+            opacity: '1',
+            pointerEvents: 'none',
+            zIndex: '-1',
+          });
+        }
+        cur = cur.parentElement;
+      }
 
-  /* ------------ Modal JSON (debug) ------------ */
-  const [renderOpen, setRenderOpen] = useState(false);
-  const [renderJSON, setRenderJSON] = useState('');
-  const handlePrepareRender = () => {
-    const payload = buildRenderPayload({
-      activeWall,
-      modulesByWall,
-      quality,
-      kitchenType,
-      catalog, // incluye aiHints/row desde catálogo
-    });
-    setRenderJSON(JSON.stringify(payload, null, 2));
-    setRenderOpen(true);
-  };
+      const restore = () => patched.forEach(({ el, prev }) => Object.assign(el.style, prev));
 
-  /* ------------ Captura robusta del Canvas (SIN TEXTOS) ------------ */
-  const captureNodeAsPng = useCallback(async (node, { includeGrid = false, includeTags = false, scale = 3 } = {}) => {
-    if (!node) throw new Error('captureNodeAsPng: missing node');
-    try {
-      const dataUrl = await htmlToImage.toPng(node, {
-        pixelRatio: Math.max(1, Number(scale) || 1),     // Hi-DPI
-        backgroundColor: '#ffffff',
-        cacheBust: true,
-        skipFonts: true,
-        style: { animation: 'none', transition: 'none' },
-        filter: (el) => {
-          const cls  = el?.classList;
-          const name = (el?.nodeName || '').toLowerCase();
-          if (!includeGrid && cls?.contains?.('grid-mesh')) return false;
-          if (!includeTags) {
-            if (cls?.contains?.('ai-tag') || cls?.contains?.('aitag-label') || cls?.contains?.('aitag-marker')) return false;
-            if (name === 'text') return false; // oculta cotas/rótulos SVG
-          }
-          return true;
-        },
-      });
-      return dataUrl;
-    } catch (e) {
-      console.warn('[capture] html-to-image falló, usando html2canvas', e);
-    }
+      try {
+        const dataUrl = await htmlToImage.toPng(node, {
+          pixelRatio: Math.max(1, Number(scale) || 1),
+          backgroundColor: '#ffffff',
+          cacheBust: true,
+          skipFonts: true,
+          style: { animation: 'none', transition: 'none' },
+          filter: (el) => {
+            const cls = el?.classList;
+            const name = (el?.nodeName || '').toLowerCase();
+            if (!includeGrid && cls?.contains?.('grid-mesh')) return false;
+            if (!includeTags) {
+              if (cls?.contains?.('ai-tag') || cls?.contains?.('aitag-label') || cls?.contains?.('aitag-marker'))
+                return false;
+              if (name === 'text') return false; // oculta rótulos SVG
+            }
+            return true;
+          },
+        });
+        return dataUrl;
+      } catch (e) {
+        console.warn('[capture] html-to-image falló, usando html2canvas', e);
+        const html2canvas = (await import('html2canvas')).default;
 
-    const html2canvas = (await import('html2canvas')).default;
+        const tempHides = [];
+        if (!includeGrid) {
+          node.querySelectorAll('.grid-mesh').forEach((el) => {
+            const prev = el.style.display; el.style.display = 'none';
+            tempHides.push(() => (el.style.display = prev));
+          });
+        }
+        if (!includeTags) {
+          node.querySelectorAll('.ai-tag, .aitag-label, .aitag-marker, svg text').forEach((el) => {
+            const prev = el.style.display; el.style.display = 'none';
+            tempHides.push(() => (el.style.display = prev));
+          });
+        }
 
-    const restores = [];
-    if (!includeGrid) {
-      node.querySelectorAll('.grid-mesh').forEach((el) => {
-        const prev = el.style.display; el.style.display = 'none';
-        restores.push(() => { el.style.display = prev; });
-      });
-    }
-    if (!includeTags) {
-      node.querySelectorAll('.ai-tag, .aitag-label, .aitag-marker, svg text').forEach((el) => {
-        const prev = el.style.display; el.style.display = 'none';
-        restores.push(() => { el.style.display = prev; });
-      });
-    }
-
-    const canvas = await html2canvas(node, {
-      backgroundColor: '#ffffff',
-      scale: Math.max(1, Number(scale) || 1),
-      useCORS: true,
-      logging: false,
-    });
-
-    restores.forEach((fn) => fn());
-    return canvas.toDataURL('image/png');
-  }, []);
+        try {
+          const canvas = await html2canvas(node, {
+            backgroundColor: '#ffffff',
+            scale: Math.max(1, Number(scale) || 1),
+            useCORS: true,
+            logging: false,
+          });
+          return canvas.toDataURL('image/png');
+        } finally {
+          tempHides.forEach((fn) => fn());
+        }
+      } finally {
+        restore();
+      }
+    },
+    []
+  );
 
   /* ------------ Render (OpenAI single) ------------ */
   const [isRendering, setIsRendering] = useState(false);
@@ -421,6 +423,13 @@ function AppLayoutInner() {
     }
   }, [activeWall, modulesByWall, quality, kitchenType, catalog]);
 
+  /* ------------ Refs de los canvas visibles ------------ */
+  const canvasContainerRefs = useRef({});
+  const getCanvasContainerRef = useCallback((id) => {
+    if (!canvasContainerRefs.current[id]) canvasContainerRefs.current[id] = React.createRef();
+    return canvasContainerRefs.current[id];
+  }, []);
+
   /* ------------ Render (Gemini single) ------------ */
   const handleRenderGemini = useCallback(async () => {
     try {
@@ -440,7 +449,8 @@ function AppLayoutInner() {
         return;
       }
 
-      const dataUrl = await captureNodeAsPng(containerEl, { includeGrid: false, includeTags: false, scale: 3 });
+      const node = containerEl.querySelector('.canvas-surface') || containerEl;
+      const dataUrl = await captureNodeAsPng(node, { includeGrid: false, includeTags: false, scale: 3 });
 
       const resp = await fetch(`${API_BASE_URL}/render/photo.gemini.raw?size=1024x1024`, {
         method: 'POST',
@@ -488,7 +498,8 @@ function AppLayoutInner() {
       for (const wallId of order) {
         const containerEl = canvasContainerRefs.current[wallId]?.current;
         if (!containerEl) continue;
-        const dataUrl = await captureNodeAsPng(containerEl, { includeGrid: false, includeTags: false, scale: 3 });
+        const node = containerEl.querySelector('.canvas-surface') || containerEl;
+        const dataUrl = await captureNodeAsPng(node, { includeGrid: false, includeTags: false, scale: 3 });
         dataUrls.push(dataUrl);
       }
       if (!dataUrls.length) {
@@ -560,7 +571,8 @@ function AppLayoutInner() {
         alert('No se encontró el canvas activo para capturar.');
         return;
       }
-      const dataUrl = await captureNodeAsPng(containerEl, { includeGrid: false, includeTags: false, scale: 3 });
+      const node = containerEl.querySelector('.canvas-surface') || containerEl;
+      const dataUrl = await captureNodeAsPng(node, { includeGrid: false, includeTags: false, scale: 3 });
 
       const makeReq = async () => {
         const r = await fetch(`${API_BASE_URL}/render/photo.gemini.raw?size=1024x1024`, {
@@ -591,6 +603,138 @@ function AppLayoutInner() {
       setIsRendering(false);
     }
   }, [activeWall, activeWallId, modulesByWall, quality, kitchenType, catalog, captureNodeAsPng]);
+
+  /* ------------ CLICK-TO-PLACE ------------ */
+  const canvasRefs = useRef({});
+  const getCanvasRef = useCallback((id) => {
+    if (!canvasRefs.current[id]) canvasRefs.current[id] = React.createRef();
+    return canvasRefs.current[id];
+  }, []);
+  const handleSidebarModuleClick = useCallback((meta) => {
+    const ref = canvasRefs.current[activeWallId];
+    ref?.current?.placeModuleFromSidebar?.(meta);
+  }, [activeWallId]);
+
+  /* ------------ PREVISUALIZAR (L) ------------ */
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const closePreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewOpen(false);
+  };
+  const downloadPreview = () => {
+    if (!previewUrl) return;
+    const a = document.createElement('a');
+    a.href = previewUrl;
+    a.download = `preview-L-${Date.now()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const loadImg = (src) =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+
+  const nextRAF = () => new Promise((r) => requestAnimationFrame(() => r()));
+
+  const handlePreviewL = useCallback(async () => {
+    try {
+      const leftWrap  = canvasContainerRefs.current['left']?.current;
+      const rightWrap = canvasContainerRefs.current['right']?.current;
+
+      if (!leftWrap || !rightWrap) {
+        alert('Necesitás tener las paredes Izquierda y Derecha en el proyecto (tipo L).');
+        return;
+      }
+
+      // Forzar las DOS paredes a estar visibles (fuera de pantalla) para que tengan medidas > 0
+      const wrappers = [leftWrap, rightWrap];
+      const restores = wrappers.map((el) => {
+        const prev = {
+          display: el.style.display,
+          position: el.style.position,
+          left: el.style.left,
+          top: el.style.top,
+          opacity: el.style.opacity,
+          pointerEvents: el.style.pointerEvents,
+          zIndex: el.style.zIndex,
+        };
+        Object.assign(el.style, {
+          display: 'block',
+          position: 'absolute',
+          left: '-10000px',
+          top: '0',
+          opacity: '1',
+          pointerEvents: 'none',
+          zIndex: '-1',
+        });
+        return () => Object.assign(el.style, prev);
+      });
+
+      // Esperar un frame para que el layout se calcule
+      await nextRAF();
+
+      const leftSurface  = leftWrap.querySelector('.canvas-surface')  || leftWrap;
+      const rightSurface = rightWrap.querySelector('.canvas-surface') || rightWrap;
+
+      const [leftUrl, rightUrl] = await Promise.all([
+        captureNodeAsPng(leftSurface,  { includeGrid: true, includeTags: false, scale: 2 }),
+        captureNodeAsPng(rightSurface, { includeGrid: true, includeTags: false, scale: 2 }),
+      ]);
+
+      // Restaurar estilos inmediatamente
+      restores.forEach((fn) => fn());
+
+      const [imgL, imgR] = await Promise.all([loadImg(leftUrl), loadImg(rightUrl)]);
+
+      const dividerW = 10;
+      const outW = imgL.width + dividerW + imgR.width;
+      const outH = Math.max(imgL.height, imgR.height);
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, outW, outH);
+
+      ctx.drawImage(imgL, 0, 0);
+      ctx.drawImage(imgR, imgL.width + dividerW, 0);
+
+      ctx.fillStyle = '#39ff14'; // verde flúor
+      ctx.fillRect(imgL.width, 0, dividerW, outH);
+
+      const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+    } catch (e) {
+      console.error('Preview L error', e);
+      alert('No se pudo generar la previsualización L.');
+    }
+  }, [captureNodeAsPng]);
+
+  /* ------------ Modal JSON (debug) ------------ */
+  const [renderOpen, setRenderOpen] = useState(false);
+  const [renderJSON, setRenderJSON] = useState('');
+  const handlePrepareRender = () => {
+    const payload = buildRenderPayload({
+      activeWall,
+      modulesByWall,
+      quality,
+      kitchenType,
+      catalog,
+    });
+    setRenderJSON(JSON.stringify(payload, null, 2));
+    setRenderOpen(true);
+  };
 
   return (
     <div className="app">
@@ -664,6 +808,12 @@ function AppLayoutInner() {
                   </>
                 )}
 
+                {kitchenType === 'L' && (
+                  <button className="btn outline" onClick={handlePreviewL} disabled={isRendering}>
+                    Previsualizar (L)
+                  </button>
+                )}
+
                 <button className="btn outline" onClick={handlePrepareRender}>
                   Ver payload
                 </button>
@@ -681,12 +831,12 @@ function AppLayoutInner() {
                     qualityName={qualityName}
                     breakdown={activeBreakdown}
                     summary={activeSummary}
-                    brandName={brandName}
-                    logoUrl={logoUrl}
-                    customerName={customerName}
-                    customerEmail={customerEmail}
-                    businessPhone={businessPhone}
-                    businessAddress={businessAddress}
+                    brandName="Easy Kitchen Design"
+                    logoUrl="/logo512.png"
+                    customerName={user?.displayName || ''}
+                    customerEmail={user?.email || ''}
+                    businessPhone="3413289463"
+                    businessAddress=""
                   />
                 ) : (
                   <div style={{ color: '#666', fontSize: 14 }}>Iniciá sesión para guardar y exportar a PDF</div>
@@ -905,6 +1055,42 @@ function AppLayoutInner() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------- Modal PREVISUALIZACIÓN L -------- */}
+      {previewOpen && (
+        <div
+          style={{
+            position:'fixed', inset:0, background:'rgba(0,0,0,.55)',
+            display:'flex', alignItems:'center', justifyContent:'center', zIndex:1750
+          }}
+          onClick={closePreview}
+        >
+          <div
+            style={{
+              width:'min(1200px,95vw)', maxHeight:'92vh', background:'#111',
+              borderRadius:12, padding:14, boxShadow:'0 12px 40px rgba(0,0,0,.5)',
+              display:'flex', flexDirection:'column', gap:10
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <strong style={{ color:'#fff' }}>Previsualización (L) — vértice en verde</strong>
+              <div style={{ flex:1 }} />
+              <button className="btn ghost" onClick={downloadPreview}>Descargar</button>
+              <button className="btn" onClick={closePreview}>Cerrar</button>
+            </div>
+            <div style={{ overflow:'auto', borderRadius:8, background:'#000', padding:8 }}>
+              {previewUrl && (
+                <img
+                  src={previewUrl}
+                  alt="preview-L"
+                  style={{ maxWidth:'100%', height:'auto', display:'block', margin:'0 auto' }}
+                />
+              )}
             </div>
           </div>
         </div>
