@@ -1,0 +1,8 @@
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.25); display:flex; align-items:center; justify-content:center; z-index: 999; }
+.modal { width: 420px; max-width: 92vw; background:#fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
+.modal__head { display:flex; align-items:center; justify-content:space-between; padding: 14px 16px; border-bottom: 1px solid #eee; }
+.modal__body { padding: 16px; }
+.btn { padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer; }
+.btn.primary { background:#1976d2; color:#fff; border-color:#1976d2; }
+.btn.danger { background:#ff4d4f; color:#fff; border-color:#ff4d4f; }
+.icon { background: transparent; border: none; font-size: 18px; cursor: pointer; }

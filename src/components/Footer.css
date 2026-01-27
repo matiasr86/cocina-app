@@ -1,0 +1,70 @@
+/* src/components/Footer.css */
+.app-footer {
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+  color: #334155;
+}
+
+.app-footer__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Izquierda */
+.app-footer__brand {
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+.app-footer__dot {
+  margin: 0 8px;
+  opacity: .4;
+}
+
+.app-footer__tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+}
+
+/* Derecha */
+.app-footer__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.app-footer__credit strong {
+  font-weight: 700;
+}
+
+.app-footer__sep {
+  opacity: .4;
+}
+
+.app-footer__year {
+  opacity: .7;
+}
+
+/* Dark mode amistoso */
+@media (prefers-color-scheme: dark) {
+  .app-footer {
+    border-top-color: #2b2f36;
+    background: #0f172a;
+    color: #cbd5e1;
+  }
+  .app-footer__tag {
+    border-color: #263042;
+    background: #111827;
+    color: #cbd5e1;
+  }
+}

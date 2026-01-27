@@ -1,0 +1,92 @@
+.shopOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.60);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1800;
+}
+
+.shopModal {
+  width: min(1000px, 94vw);
+  max-height: 90vh;
+  background: #111;
+  color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.shopHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.shopHeader strong {
+  font-size: 22px;
+  font-weight: 800;
+}
+.shopHeader .btn {
+  margin-left: auto;
+}
+
+.shopIntro {
+  color: #ddd;
+  font-size: 14px;
+  margin: 0;
+}
+
+.shopGrid {
+  display: grid;
+  grid-template-columns: repeat( auto-fit, minmax(220px, 1fr) );
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.shopCard {
+  background: #0b0b0b;
+  border: 1px solid #262626;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.shopCard:hover { border-color: #3a3a3a; transform: translateY(-1px); }
+
+.shopCard__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.shopCard__cost {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.shopCard__desc {
+  margin: 0;
+  color: #bbb;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.shopCard__actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shopFootnote {
+  color: #999;
+  font-size: 12px;
+}

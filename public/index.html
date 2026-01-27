@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta name="theme-color" content="#ffffff" />
+
+    <title>Diseña facil y jugando tu cocina modular en 2D. Renderiza con IA probando distintos acabados.</title>
+    <meta
+      name="description"
+      content="Diseña tu cocina soñada en 2D de forma fácil. Arrastra módulos, cambia medidas y obtené la cotización en tiempo real por calidad (Started, Premium, Deluxe). Exportá tu diseño a PDF."
+    />
+    <meta
+      name="keywords"
+      content="diseño de cocinas, cocina 2D, cotización cocina, muebles de cocina, planner cocina, presupuesto cocina online"
+    />
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" />
+    <link rel="canonical" href="https://cocinaplay.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Cocinaplay — Diseña tu cocina en 2D con cotización instantánea" />
+    <meta
+      property="og:description"
+      content="Arrastrá módulos, elegí medidas y calidad, y mirá el precio en vivo. Exportá tu plano y resumen en PDF."
+    />
+    <meta property="og:url" content="https://cocinaplay/" />
+    <meta property="og:site_name" content="Cocinaplay" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cocinaplay — Diseña tu cocina en 2D" />
+    <meta
+      name="twitter:description"
+      content="Planificá tu cocina en 2D y obtené la cotización en tiempo real. Exportá tu diseño a PDF."
+    />
+    <meta name="twitter:image" content="%PUBLIC_URL%/og-cover.png" />
+
+    <!-- PWA / Icons -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- (Opcional) fuentes
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    -->
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "Cocinaplay",
+            "url": "https://cocinaplay.com/",
+            "logo": "https://cocinaplay.com/logo512.png",
+            "sameAs": [
+              "https://www.instagram.com/tu_cuenta",
+              "https://www.facebook.com/tu_cuenta"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "name": "Cocinaplay",
+            "url": "https://cocinaplay.com/",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://cocinaplay.com/?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
+
+    <!-- (Opcional) Analytics
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXX');
+    </script>
+    -->
+
+    <!-- 👇 Estilos NEUTROS: no tocan tu UI -->
+    <style>
+      html, body { height: 100%; }
+      body { margin: 0; }
+      #root { min-height: 100%; }
+      noscript {
+        display: block;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem 1.25rem;
+        background: #fff7ed;
+        color: #7c2d12;
+        border: 1px solid #fdba74;
+        border-radius: 12px;
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      Para usar Cocinaplay necesitás tener <strong>JavaScript habilitado</strong>.
+      Aquí podés diseñar tu cocina en 2D, probar módulos y medidas y obtener precios en tiempo real.
+    </noscript>
+    <div id="root"></div>
+  </body>
+</html>
