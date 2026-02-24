@@ -23,7 +23,8 @@ export default function TopBar({
   onChangeQuality,
   onAdmin,
   onOpenAdminLogin,
-  onOpenShowcase, // 👈 nuevo
+  onOpenShowcase,
+  showQualityControls = true,
 }) {
   const { user, isAdmin, loginGoogle, logout } = useAuth();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -61,15 +62,20 @@ export default function TopBar({
             Nuevo proyecto
           </button>
 
-          <div className="topbar__qualityBadge" title="Calidad seleccionada">
-            <span className="dot" />
-            <span className="label">
-              Calidad: <strong>{qualityName || '—'}</strong>
-            </span>
-          </div>
-          <button className="btn ghost" onClick={onChangeQuality}>
-            Cambiar calidad
-          </button>
+          {showQualityControls && (
+            <>
+              <div className="topbar__qualityBadge" title="Calidad seleccionada">
+                <span className="dot" />
+                <span className="label">
+                  Calidad: <strong>{qualityName || '—'}</strong>
+                </span>
+              </div>
+
+              <button className="btn ghost" onClick={onChangeQuality}>
+                Cambiar calidad
+              </button>
+            </>
+          )}
 
           {/* 👇 Botón nuevo */}
           <button

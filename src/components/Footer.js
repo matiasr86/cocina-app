@@ -19,7 +19,10 @@ export default function Footer() {
 
         <div className="app-footer__right">
           <span className="app-footer__credit">
-            App desarrollada por <strong>Devcode73</strong>
+            App desarrollada por {" "} 
+            <strong>
+              <a href="https://devcode73.com.ar" target="_blank" rel="noopener noreferrer" className="footer-link">Devcode73</a>
+            </strong>
           </span>
           <span className="app-footer__sep" aria-hidden>—</span>
           <span className="app-footer__year">© {year}</span>

@@ -67,6 +67,9 @@ function AppLayoutInner() {
   const { prefs } = useConsent();
   const [showcaseOpen, setShowcaseOpen] = useState(false);
 
+  const instancia = (process.env.REACT_APP_INSTANCIA || 'base').trim().toLowerCase();
+  const isBaseInstance = instancia === 'base';
+
 
   /* ------------ Créditos ------------ */
   const [credits, setCredits] = useState({ total: 0, cooldownUntil: null, inflight: false });
@@ -130,11 +133,18 @@ function AppLayoutInner() {
 
 
   /* ------------ Calidad ------------ */
-  const [quality, setQuality] = useState(null);
+  const [quality, setQuality] = useState(() => (isBaseInstance ? 'premium' : null));
   const [qpOpen, setQpOpen] = useState(false); // abre QualityPicker
 
   useEffect(() => {
     try {
+      // 👇 Instancia base: no usamos selector de calidad
+      if (isBaseInstance) {
+        setQuality((prev) => prev || 'premium'); // calidad interna fija (ajustable)
+        setQpOpen(false);
+        return;
+      }
+
       const raw = prefs.get(LS_KEY_QUALITY);
       if (raw) {
         setQuality(raw);
@@ -143,7 +153,7 @@ function AppLayoutInner() {
         setQpOpen(true); // primera vez: mostramos selector
       }
     } catch {}
-  }, [prefs]);
+  }, [prefs, isBaseInstance]);
 
   useEffect(() => {
     try {
@@ -748,7 +758,10 @@ function AppLayoutInner() {
 
       <TopBar
         qualityName={qualityName}
-        onChangeQuality={() => setQpOpen(true)}
+        showQualityControls={!isBaseInstance} // 👈 ocultar en base
+        onChangeQuality={() => {
+          if (!isBaseInstance) setQpOpen(true); // 👈 bloqueo extra
+        }}
         onAdmin={openAdmin}
         onOpenAdminLogin={() => setAdminLoginOpen(true)}
         onOpenShowcase={() => setShowcaseOpen(true)}
@@ -927,7 +940,7 @@ function AppLayoutInner() {
       </div>
 
       {/* —— QualityPicker controlado —— */}
-      {qpOpen && (
+      {!isBaseInstance && qpOpen && (
         <div className="qp__overlay" onClick={() => setQpOpen(false)}>
           <div className="qp__dialog" onClick={(e) => e.stopPropagation()}>
             <QualityPicker

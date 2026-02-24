@@ -55,6 +55,18 @@
   opacity: .7;
 }
 
+.footer-link {
+  font-weight: bold;       /* igual que <strong> */
+  text-decoration: none;   /* quita el subrayado */
+  color: inherit;          /* usa el mismo color del texto padre */
+}
+
+.footer-link:hover {
+  text-decoration: underline; /* opcional: subrayado al pasar el mouse */
+}
+
+
+
 /* Dark mode amistoso */
 @media (prefers-color-scheme: dark) {
   .app-footer {
