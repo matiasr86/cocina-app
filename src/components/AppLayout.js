@@ -1,7 +1,8 @@
 // src/components/AppLayout.js
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { buildRenderPayload } from '../utils/renderPayload';
-import { API_BASE_URL } from '../api/http';
+import { API_BASE_URL_CREDITS } from '../api/http';
+
 import * as htmlToImage from 'html-to-image';
 
 import TopBar from './TopBar';
@@ -66,13 +67,20 @@ function AppLayoutInner() {
   const toast = useToast();
   const { prefs } = useConsent();
   const [showcaseOpen, setShowcaseOpen] = useState(false);
+  const [welcomeTipOpen, setWelcomeTipOpen] = useState(false);
 
   const instancia = (process.env.REACT_APP_INSTANCIA || 'base').trim().toLowerCase();
   const isBaseInstance = instancia === 'base';
 
 
   /* ------------ Créditos ------------ */
-  const [credits, setCredits] = useState({ total: 0, cooldownUntil: null, inflight: false });
+  const [credits, setCredits] = useState({
+    total: 0,
+    cooldownUntil: null,
+    inflight: false,
+    hasPurchasedCredits: false,
+    welcomeMonthlyQuota: { limit: 100, used: 0, remaining: 100, reached: false },
+  });
   const [creditsLoading, setCreditsLoading] = useState(false);
   const [redeemBusy] = useState(false); // solo leemos el flag (sin setter)
 
@@ -81,7 +89,7 @@ function AppLayoutInner() {
     try {
       setCreditsLoading(true);
       const token = await user.getIdToken();
-      const r = await fetch(`${API_BASE_URL}/credits/me?ts=${Date.now()}`, {
+      const r = await fetch(`${API_BASE_URL_CREDITS}/credits/me?ts=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -96,6 +104,13 @@ function AppLayoutInner() {
           total: Number(js?.total ?? prev.total ?? 0),
           cooldownUntil: chosen,
           inflight: typeof js?.inflight === 'boolean' ? js.inflight : !!prev.inflight,
+
+          hasPurchasedCredits: typeof js?.hasPurchasedCredits === 'boolean'
+            ? js.hasPurchasedCredits
+            : !!prev.hasPurchasedCredits,
+          welcomeMonthlyQuota: js?.welcomeMonthlyQuota
+            ? js.welcomeMonthlyQuota
+            : (prev?.welcomeMonthlyQuota || { limit: 100, used: 0, remaining: 100, reached: false }),
         };
       });
     } catch (e) {
@@ -122,6 +137,8 @@ function AppLayoutInner() {
     return Math.max(0, untilMs - nowMs);
   }, [credits?.cooldownUntil, nowMs]);
 
+
+
   const isCooldownActive = cooldownMsLeft > 0;
 
   useEffect(() => {
@@ -131,6 +148,8 @@ function AppLayoutInner() {
   }, [isCooldownActive]);
 
 
+  const welcomeBlocked =
+  !credits.hasPurchasedCredits && !!credits?.welcomeMonthlyQuota?.reached;
 
   /* ------------ Calidad ------------ */
   const [quality, setQuality] = useState(() => (isBaseInstance ? 'premium' : null));
@@ -521,6 +540,10 @@ function AppLayoutInner() {
       toast.info('Iniciá sesión para renderizar.');
       return;
     }
+    if (welcomeBlocked) {
+      toast.info('Se alcanzó el cupo mensual de renders de bienvenida. Para seguir, comprá créditos o canjeá un código.');
+      return;
+    }
     if (!credits?.total) {
       toast.info('No tenés créditos. Podés comprarlos o canjear un código.');
       return;
@@ -541,7 +564,7 @@ function AppLayoutInner() {
     setPreviewCleanUrl(cleanDataUrl);
     setPendingMode('best3');
     setPromptOpen(true);
-  }, [toast, authReady, user, credits?.total, isCooldownActive, cooldownMsLeft, activeWallId, captureNodeAsPng]);
+  }, [toast, authReady, user, credits?.total, isCooldownActive, cooldownMsLeft, activeWallId, captureNodeAsPng,welcomeBlocked]);
 
   const handleConfirmPrompt = useCallback(
     async (userText, bridgeStrict) => {
@@ -583,7 +606,7 @@ function AppLayoutInner() {
 
       const makeReqTriad = async () => {
         const token = await user.getIdToken();
-        const r = await fetch(`${API_BASE_URL}/render/triad`, {
+        const r = await fetch(`${API_BASE_URL_CREDITS}/render/triad`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ payload: enriched, imageDataUrl: previewCleanUrl }),
@@ -650,6 +673,26 @@ function AppLayoutInner() {
           setTimeout(() => { loadCredits(); }, 400);
 
           toast.info(`El modelo de IA está ocupado. Podrás reintentar en ${fmtCountdown(secs * 1000)}.`);
+        } else if (code === 'welcome_monthly_limit' || status === 429) {
+          // ✅ El backend avisó que se agotó el cupo global mensual de bienvenida
+          toast.info('Se alcanzó el límite mensual de renders con créditos de bienvenida. Para seguir, comprá créditos o canjeá un código.');
+
+          // ✅ Reflejo inmediato en UI: esto hace que aparezcan Comprar/Canjear
+          setCredits(prev => ({
+            ...prev,
+            welcomeMonthlyQuota: {
+              ...(prev.welcomeMonthlyQuota || { limit: 100, used: 100, remaining: 0, reached: true }),
+              reached: true,
+              remaining: 0,
+            },
+          }));
+
+          // opcional: abrir automáticamente el modal de compra
+          setShopOpen(true);
+
+          // sincronizá con backend (por si querés "used" real)
+          setTimeout(() => { loadCredits(); }, 200);
+
         } else if (code === 'no_credits' || status === 402) {
           toast.error('No tenés créditos disponibles.');
         } else {
@@ -698,6 +741,7 @@ function AppLayoutInner() {
     if (!canvasRefs.current[id]) canvasRefs.current[id] = React.createRef();
     return canvasRefs.current[id];
   }, []);
+  
   const handleSidebarModuleClick = useCallback(
     (meta) => {
       const ref = canvasRefs.current[activeWallId];
@@ -786,33 +830,66 @@ function AppLayoutInner() {
                     <div style={{ color: '#888', fontSize: 14, fontWeight: 'bold'}}>Iniciá sesión para gestionar tus proyectos, exportar a PDF y renderizar con IA.</div>
                   ) : (
                     <>
-                      {credits.total > 0 ? (
-                        !isCooldownActive && (
-                          <button
-                            className="btn primary"
-                            onClick={openPromptFor}
-                            disabled={isRendering}
-                            title="Genera 3 variantes con IA a partir de tu diseño. Consume 1 crédito."
-                            aria-label="Renderizar con IA (consume 1 crédito)"
-                          >
-                            {isRendering ? 'Renderizando…' : 'Renderizar con IA ✨'}
-                          </button>
-                        )
-                      ) : (
-                        <>
-                          <button
-                            className="btn outline"
-                            onClick={() => setShopOpen(true)}
-                            title="Ver packs de créditos"
-                          >
-                            Comprar créditos
-                          </button>
-
-                          <button className="btn outline" onClick={() => setRedeemOpen(true)} disabled={redeemBusy}>
-                            {redeemBusy ? 'Canjeando…' : 'Canjear código'}
-                          </button>
-                        </>
+                      {welcomeBlocked && (
+                        <div
+                          className="pill"
+                          style={{
+                            background: '#2a1800',
+                            color: '#f2c16b',
+                            padding: '6px 10px',
+                            borderRadius: 20,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                          title="Se agotó el cupo mensual de renders con créditos de bienvenida. Para renderizar
+                          deberas comprar créditos, encontrá el pack que más se adapte a tus necesidades!."
+                        >
+                          ⚠️ Cupo de bienvenida agotado
+                        </div>
                       )}
+                      {(() => {
+                        const showPayActions = (credits.total <= 0) || welcomeBlocked;
+                        const canRender = (credits.total > 0) && !welcomeBlocked && !isCooldownActive;
+
+                        if (canRender) {
+                          return (
+                            <button
+                              className="btn primary"
+                              onClick={openPromptFor}
+                              disabled={isRendering}
+                              title="Genera 3 variantes con IA a partir de tu diseño. Consume 1 crédito."
+                              aria-label="Renderizar con IA (consume 1 crédito)"
+                            >
+                              {isRendering ? 'Renderizando…' : 'Renderizar con IA ✨'}
+                            </button>
+                          );
+                        }
+
+                        if (showPayActions) {
+                          return (
+                            <>
+                              <button
+                                className="btn outline"
+                                onClick={() => setShopOpen(true)}
+                                title="Ver packs de créditos"
+                              >
+                                Comprar créditos
+                              </button>
+
+                              <button
+                                className="btn outline"
+                                onClick={() => setRedeemOpen(true)}
+                                disabled={redeemBusy}
+                              >
+                                {redeemBusy ? 'Canjeando…' : 'Canjear código'}
+                              </button>
+                            </>
+                          );
+                        }
+
+                        return null;
+                      })()}
 
                       <button className="btn outline" onClick={() => setProjectsOpen(true)}>
                         Mis proyectos 📁
@@ -824,7 +901,7 @@ function AppLayoutInner() {
                         qualityName={qualityName}
                         breakdown={activeBreakdown}
                         summary={activeSummary}
-                        brandName="Easy Kitchen Design"
+                        brandName="Cocina Play"
                         logoUrl="/logo512.png"
                         customerName={user?.displayName || ''}
                         customerEmail={user?.email || ''}
@@ -864,26 +941,75 @@ function AppLayoutInner() {
                 </div>
               </div>
 
-              {/* DERECHA: créditos */}
               {authReady && user && (
-                <div
-                  className="pill"
-                  title="Renderizar con IA (consume 1 crédito)"
-                  style={{
-                    background: '#141414',
-                    color: '#fff',
-                    padding: '6px 12px',
-                    borderRadius: 20,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <span role="img" aria-label="coin">
-                    💰
-                  </span>
-                  <strong>Créditos:</strong>
-                  <span>{creditsLoading ? '…' : credits.total}</span>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <div
+                    className="pill"
+                    title="Renderizar con IA (consume 1 crédito)"
+                    style={{
+                      background: '#141414',
+                      color: '#fff',
+                      padding: '6px 12px',
+                      borderRadius: 20,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <span role="img" aria-label="coin">💰</span>
+                    <strong>Créditos:</strong>
+                    <span>{creditsLoading ? '…' : credits.total}</span>
+                  </div>
+
+                  {/* 👇 Info de bienvenida: solo si NUNCA compró créditos */}
+                  {!credits.hasPurchasedCredits && (
+                    <div
+                      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
+                      onMouseEnter={() => setWelcomeTipOpen(true)}
+                      onMouseLeave={() => setWelcomeTipOpen(false)}
+                    >
+                      <button
+                        type="button"
+                        className="btn outline"
+                        onClick={() => setWelcomeTipOpen((v) => !v)}
+                        title="Info sobre renders de bienvenida"
+                        aria-label="Info sobre renders de bienvenida"
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 999,
+                          lineHeight: 1,
+                        }}
+                      >
+                        ⓘ
+                      </button>
+
+                      {welcomeTipOpen && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 8px)',
+                            right: 0,
+                            width: 320,
+                            background: '#111',
+                            color: '#fff',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            borderRadius: 10,
+                            padding: 10,
+                            boxShadow: '0 10px 30px rgba(0,0,0,.35)',
+                            zIndex: 3000,
+                            fontSize: 13,
+                          }}
+                          role="tooltip"
+                        >
+                          <div style={{ fontWeight: 700, marginBottom: 6 }}>Renders de bienvenida</div>
+                          <div style={{ opacity: 0.9, lineHeight: 1.35 }}>
+                            Hay un cupo <strong>global</strong> de <strong>200</strong> renders por mes para créditos de bienvenida.
+                            Si se agota, podrás renderizar solo con créditos comprados.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1121,7 +1247,7 @@ function AppLayoutInner() {
       <RedeemCodeModal
         open={redeemOpen}
         onClose={() => setRedeemOpen(false)}
-        apiBase={API_BASE_URL}
+        apiBase={API_BASE_URL_CREDITS}
         getIdToken={() => user.getIdToken()}
         onRedeemed={async (newTotal, added, program) => {
           const detail = program ? ` (${program})` : '';

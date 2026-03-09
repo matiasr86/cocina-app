@@ -1,6 +1,6 @@
 // src/components/AdminFabricatorsModal.js
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { API_BASE_URL } from '../api/http';
+import { API_BASE_URL_CREDITS } from '../api/http';
 import { useToast } from './ToastProvider';
 import { useAuth } from '../context/AuthContext';
 import L from 'leaflet';
@@ -159,7 +159,7 @@ export default function AdminFabricatorsModal({ open, onClose }) {
     setLoading(true);
     try {
       const token = await user.getIdToken();
-      const r = await fetch(`${API_BASE_URL}/fabricators/admin?status=${tab}`, {
+      const r = await fetch(`${API_BASE_URL_CREDITS}/fabricators/admin?status=${tab}`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -206,7 +206,7 @@ export default function AdminFabricatorsModal({ open, onClose }) {
       }
       try {
         const token = await user.getIdToken();
-        const r = await fetch(`${API_BASE_URL}/fabricators/admin/${id}`, {
+        const r = await fetch(`${API_BASE_URL_CREDITS}/fabricators/admin/${id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',

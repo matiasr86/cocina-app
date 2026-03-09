@@ -65,15 +65,15 @@ export default function CreditsShopModal({
               <p className="shopCard__desc">{p.blurb}</p>
               <div className="shopCard__actions">
                 {/* Botón en solo-lectura hasta abrir Odoo */}
-                <button
-                  className="btn primary"
-                  disabled
-                  aria-disabled="true"
-                  title="Próximamente"
+                <a 
+                  href="https://www.devcode73.com.ar/shop/category/cocina-play-1" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="btn primary" 
+                  title="Comprar"
                 >
                   Comprar
-                </button>
-                <span className="pill pill--muted">Próximamente</span>
+                </a>
               </div>
             </article>
           ))}

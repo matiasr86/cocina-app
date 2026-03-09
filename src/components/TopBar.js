@@ -29,6 +29,17 @@ export default function TopBar({
   const { user, isAdmin, loginGoogle, logout } = useAuth();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const instancia = (process.env.REACT_APP_INSTANCIA || 'base').toLowerCase().trim();
+
+  const helpUrl =
+    instancia === 'fabricante'
+      ? 'https://www.devcode73.com.ar/ayuda-cocinaplay-fabricante'
+      : 'https://www.devcode73.com.ar/ayuda-cocinaplay';
+
+  const openHelp = () => {
+    window.open(helpUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const runNewProject = () => {
     try {
       for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -90,6 +101,14 @@ export default function TopBar({
 
         {/* Derecha - acciones */}
         <div className="topbar__actions">
+          <button
+            className="btn outline"
+            onClick={openHelp}
+            title="Abrir centro de ayuda"
+            aria-label="Abrir ayuda"
+          >
+            Ayuda
+          </button>
           <button className="btn outline" onClick={onOpenAdminLogin} title="Ingresar como administrador">
             Acceso admin
           </button>

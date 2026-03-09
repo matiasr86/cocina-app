@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './FabricatorsModal.css';
 
-import { API_BASE_URL } from '../api/http';
+import { API_BASE_URL_CREDITS } from '../api/http';
 import { useToast } from './ToastProvider';
 import AddressAutocomplete from './AddressAutocomplete';
 
@@ -110,7 +110,7 @@ export default function FabricatorsModal({ open, onClose }) {
       const qs = new URLSearchParams();
       if (province.trim()) qs.set('province', province.trim());
       if (city.trim()) qs.set('city', city.trim());
-      const r = await fetch(`${API_BASE_URL}/fabricators?${qs.toString()}`);
+      const r = await fetch(`${API_BASE_URL_CREDITS}/fabricators?${qs.toString()}`);
       const js = await r.json().catch(() => null);
       if (!r.ok) throw new Error(js?.error || `HTTP ${r.status}`);
 
@@ -181,7 +181,7 @@ export default function FabricatorsModal({ open, onClose }) {
           lng: form.lng !== '' ? Number(form.lng) : undefined,
         },
       };
-      const r = await fetch(`${API_BASE_URL}/fabricators`, {
+      const r = await fetch(`${API_BASE_URL_CREDITS}/fabricators`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

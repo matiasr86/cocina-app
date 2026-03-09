@@ -18,6 +18,9 @@ export default function RightPanel({ summary = {}, breakdown = {}, onOpenFabrica
   const instancia = (process.env.REACT_APP_INSTANCIA || 'base').toLowerCase();
   const showRegistryButton = instancia === 'base';  // muestra botón “Registro de Fabricantes”
   const showPriceEstimate  = instancia !== 'base';  // oculta precios si es “base”
+  const showFabricatorsCTA = instancia !== 'fabricante'; // oculta bloque CTA si es “fabricante”
+
+
 
   const entries = Object.entries(summary);
   const items = breakdown.items || [];
@@ -32,16 +35,18 @@ export default function RightPanel({ summary = {}, breakdown = {}, onOpenFabrica
 
   return (
     <aside className="rightpanel">
-      <div className="rp-cta">
-        <div className="rp-cta__eyebrow">Clientes ⇆ Fabricantes</div>
-        <div className="rp-cta__title">¿Buscás fabricante?</div>
-        <div className="rp-cta__text">
-          Encontrá los más cercanos en el <strong>Registro de Fabricantes</strong>.
+      {showFabricatorsCTA && (
+        <div className="rp-cta">
+          <div className="rp-cta__eyebrow">Clientes ⇆ Fabricantes</div>
+          <div className="rp-cta__title">¿Buscás fabricante?</div>
+          <div className="rp-cta__text">
+            Encontrá los más cercanos en el <strong>Registro de Fabricantes</strong>.
+          </div>
+          <div className="rp-cta__text">
+            ¿Sos fabricante? <strong>Registrate gratis.</strong>
+          </div>
         </div>
-        <div className="rp-cta__text">
-          ¿Sos fabricante? <strong>Registrate gratis.</strong>
-        </div>
-      </div>
+      )}
       {/* Header superior con botón */}
       {showRegistryButton && (
           <button
