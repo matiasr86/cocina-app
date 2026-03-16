@@ -1,147 +1,367 @@
-/* Layout general */
+/* src/components/RightPanel.css */
+
 .rightpanel {
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: var(--topbar-offset, 96px);
+  align-self: start;
+  max-height: calc(100dvh - var(--topbar-offset, 96px) - 16px);
+  overflow: auto;
+
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
+/* =========================
+   Header
+========================= */
 .rp-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 10px;
 }
 
 .rightpanel__title {
   margin: 0;
   font-size: 18px;
-}
-
-/* Botón superior */
-.rp-btn {
-  appearance: none;
-  border: 3px solid #013dc998;
-  background: #0f172a;           /* azul muy oscuro / negro */
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size:medium;
-  line-height: 1;
-  cursor: pointer;
-  transition: filter .15s ease, transform .02s ease;
-}
-.rp-btn:hover { filter: brightness(1.05); }
-.rp-btn:active { transform: translateY(1px); }
-
-/* Bloques */
-.rightpanel__body { }
-
-.rp-block { margin-bottom: 16px; }
-
-/* Cabecera de bloque (resumen) */
-.rp-block__hdr {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-/* Lista de resumen */
-.rp-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 6px;
-}
-.rp-list__item {
-  display: flex;
-  justify-content: space-between;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: #fafafa;
-}
-.rp-list__label { font-weight: 600; }
-.rp-list__badge {
-  min-width: 28px;
-  text-align: center;
-  background: #111;
-  color: #fff;
-  border-radius: 999px;
-  padding: 2px 8px;
-}
-
-/* Tabla de estimación */
-.rp-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 8px;
-}
-.rp-th-left {
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  padding: 6px 4px;
-}
-.rp-th-right {
-  text-align: right;
-  border-bottom: 1px solid #eee;
-  padding: 6px 4px;
-}
-.rp-td-left  { text-align: left;  padding: 6px 4px; }
-.rp-td-right { text-align: right; padding: 6px 4px; }
-
-/* Condiciones */
-.rp-conditions {
-  margin-top: 18px;
-  padding: 12px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f8fafc;
-}
-.rp-conditions__title {
   font-weight: 700;
-  margin-bottom: 4px;
-}
-.rp-conditions__row {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #334155;
+  color: #0f172a;
 }
 
-.muted { color: #667085; }
+/* =========================
+   Body
+========================= */
+.rightpanel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
 
-
-.rp-cta{
-  padding: 12px 12px;
+/* =========================
+   CTA superior
+========================= */
+.rp-cta {
+  padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   background: #f8fafc;
-  margin-bottom: 10px;
 }
 
-.rp-cta__eyebrow{
+.rp-cta__eyebrow {
   font-size: 11px;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #64748b;
 }
 
-.rp-cta__title{
+.rp-cta__title {
   margin-top: 6px;
   font-size: 15px;
   font-weight: 800;
   color: #0f172a;
 }
 
-.rp-cta__text{
+.rp-cta__text {
   margin-top: 6px;
   font-size: 13px;
-  line-height: 1.35;
+  line-height: 1.4;
   color: #475569;
 }
 
-.rp-btn--full{
+/* =========================
+   Botón principal
+========================= */
+.rp-btn {
+  appearance: none;
+  width: 100%;
+  border: 2px solid #013dc998;
+  background: #0f172a;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.04s ease, opacity 0.15s ease;
+}
+
+.rp-btn:hover {
+  filter: brightness(1.05);
+}
+
+.rp-btn:active {
+  transform: translateY(1px);
+}
+
+.rp-btn--full {
   width: 100%;
 }
 
+/* =========================
+   Bloques
+========================= */
+.rp-block {
+  min-width: 0;
+}
+
+.rp-block__hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+/* =========================
+   Lista resumen
+========================= */
+.rp-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.rp-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fafafa;
+}
+
+.rp-list__label {
+  font-weight: 600;
+  color: #0f172a;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.rp-list__badge {
+  min-width: 30px;
+  text-align: center;
+  background: #111;
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+/* =========================
+   Tabla estimación
+========================= */
+.rp-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rp-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.rp-table thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.rp-th-left,
+.rp-td-left {
+  text-align: left;
+}
+
+.rp-th-right,
+.rp-td-right {
+  text-align: right;
+}
+
+.rp-th-left,
+.rp-th-right {
+  border-bottom: 1px solid #eee;
+  padding: 8px 6px;
+  color: #475569;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rp-td-left,
+.rp-td-right {
+  padding: 8px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+  vertical-align: top;
+}
+
+.rp-table tfoot td {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+  background: #fff;
+}
+
+/* =========================
+   Condiciones
+========================= */
+.rp-conditions {
+  margin-top: 4px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.rp-conditions__title {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #0f172a;
+}
+
+.rp-conditions__row {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+/* =========================
+   Texto muted
+========================= */
+.muted {
+  color: #667085;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* =========================
+   Tablet grande
+========================= */
+@media (max-width: 1200px) {
+  .rightpanel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* =========================
+   Tablet
+========================= */
+@media (max-width: 992px) {
+  .rightpanel {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .rightpanel__title {
+    font-size: 17px;
+  }
+
+  .rp-table {
+    min-width: 480px;
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+@media (max-width: 640px) {
+  .rightpanel {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .rp-header {
+    align-items: flex-start;
+  }
+
+  .rightpanel__title {
+    font-size: 16px;
+  }
+
+  .rp-btn {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .rp-cta {
+    padding: 10px;
+  }
+
+  .rp-cta__title {
+    font-size: 14px;
+  }
+
+  .rp-cta__text {
+    font-size: 12px;
+  }
+
+  .rp-block__hdr {
+    font-size: 13px;
+  }
+
+  .rp-list__item {
+    padding: 8px 9px;
+  }
+
+  .rp-list__label {
+    font-size: 13px;
+  }
+
+  .rp-list__badge {
+    font-size: 11px;
+    min-width: 28px;
+  }
+
+  .rp-table {
+    min-width: 420px;
+    font-size: 13px;
+  }
+
+  .rp-th-left,
+  .rp-th-right,
+  .rp-td-left,
+  .rp-td-right {
+    padding: 7px 5px;
+  }
+}
+
+/* =========================
+   Mobile chico
+========================= */
+@media (max-width: 420px) {
+  .rightpanel {
+    padding: 10px;
+  }
+
+  .rp-cta__eyebrow {
+    font-size: 10px;
+  }
+
+  .rp-table {
+    min-width: 380px;
+  }
+}

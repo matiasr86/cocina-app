@@ -1,10 +1,159 @@
-.canvas-surface {
-  position: relative;
-  background: #fff;
-  border: 1px solid #ccc;
-  overflow: hidden; /* evita ver módulos fuera */
+/* src/components/Canvas.css */
+
+.canvas-shell {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
+/* =========================
+   Toolbar superior
+========================= */
+.canvas-toolbar {
+  width: 100%;
+  padding: 10px 0 12px;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.canvas-toolbar__label {
+  color: #0f172a;
+  font-size: 16px;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.canvas-toolbar__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.canvas-toolbar__btn {
+  min-width: 40px;
+}
+
+.canvas-zoom__value {
+  min-width: 48px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.canvas-grid-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  font-weight: 400;
+  color: #334155;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.canvas-grid-toggle input {
+  margin: 0;
+}
+
+/* =========================
+   Wrapper scrollable SOLO del lienzo
+========================= */
+.canvas-stageScroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  justify-content: flex-start;
+}
+
+
+
+.canvas-stageScroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.canvas-stageScroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.canvas-stageScroll::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 999px;
+}
+
+/* =========================
+   Superficie
+========================= */
+.canvas-surface {
+  position: relative;
+  flex: 0 0 auto;
+  background: #fff;
+  border: 1px solid #d6dbe1;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+/* Scrollbar suave interna */
+.canvas-surface::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.canvas-surface::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.canvas-surface::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 999px;
+}
+
+/* =========================
+   SVG / grilla
+========================= */
+.canvas-surface svg {
+  display: block;
+  max-width: none;
+}
+
+.canvas-surface svg line {
+  stroke: #d7dbe0;
+}
+
+.canvas-surface svg rect {
+  fill: #d7d7d7;
+}
+
+.canvas-surface .grid-mesh line {
+  stroke: #e7eaee;
+}
+
+.canvas-surface .rulers line {
+  stroke: #8f99a6;
+}
+
+.canvas-surface .rulers text {
+  fill: #55606f;
+  font-size: 10px;
+}
+
+/* =========================
+   Módulos
+========================= */
 .module {
   position: absolute;
   box-sizing: border-box;
@@ -12,27 +161,252 @@
 }
 
 .module.selected {
-  outline-offset: 0; /* se pega al borde del módulo */
+  outline-offset: 0;
 }
 
-/* Por ejemplo en src/components/Canvas.css, al final */
-.canvas-surface svg line {
-  stroke: #d0d0d0;       /* un poquito más oscuro que #eee */
-}
-
-.canvas-surface svg rect {
-  fill: #6E7074;         /* fondo más claro para mejor contraste */
-}
-
-/* Si tus módulos tienen una clase .module o similar, marcá el borde */
-.canvas-surface .module,
 .canvas-surface [data-module] {
-  outline: 2px solid rgba(0,0,0,.85);
-  background: #fff;      /* evita transparencias lavadas */
+  box-sizing: border-box;
 }
 
-/* Cabecera del panel de edición */
-.canvas-editor__header {
-  cursor: move;
+/* Etiqueta AI sobre módulo */
+.aitag-marker {
+  position: absolute;
+  text-align: center;
+  font-size: 9px;
+  line-height: 10px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  pointer-events: none;
   user-select: none;
+  z-index: 50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================
+   Panel de edición
+========================= */
+.canvas-editor {
+  position: absolute;
+  width: 230px;
+  min-height: 170px;
+  z-index: 10;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #d8dee6;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.canvas-editor__actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.canvas-editor__grid {
+  display: grid;
+  grid-template-columns: auto 90px;
+  gap: 6px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.canvas-editor__grid:last-child {
+  margin-bottom: 0;
+}
+
+.canvas-editor__grid label {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.canvas-editor__grid input {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #d6dbe1;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* =========================
+   Pickers
+========================= */
+.canvas-picker {
+  position: absolute;
+  width: 260px;
+  background: #fff;
+  border: 1px solid #d8dee6;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.canvas-picker__title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.canvas-picker__list {
+  display: grid;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.canvas-picker__formGrid {
+  display: grid;
+  grid-template-columns: auto 100px;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.canvas-picker__formGrid label {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.canvas-picker__formGrid input {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #d6dbe1;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.canvas-picker__section {
+  margin-bottom: 10px;
+}
+
+.canvas-picker__sectionTitle {
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #334155;
+  font-size: 13px;
+}
+
+.canvas-picker__chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.canvas-picker__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   Tablet
+========================= */
+@media (max-width: 768px) {
+  .canvas-toolbar {
+    align-items: flex-start;
+  }
+
+  .canvas-toolbar__controls {
+    width: 100%;
+  }
+
+  .canvas-grid-toggle {
+    margin-left: 0;
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+@media (max-width: 640px) {
+  .canvas-toolbar {
+    padding: 8px 0 10px;
+    gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .canvas-toolbar__label {
+    font-size: 15px;
+    width: 100%;
+  }
+
+  .canvas-toolbar__controls {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    gap: 8px;
+    align-items: center;
+    justify-content: start;
+  }
+
+  .canvas-toolbar__btn {
+    min-width: 36px;
+  }
+
+  .canvas-zoom__value {
+    min-width: 42px;
+    font-size: 13px;
+  }
+
+  .canvas-grid-toggle {
+    grid-column: 1 / -1;
+    width: 100%;
+    font-size: 13px;
+    margin-left: 0;
+  }
+
+  .canvas-surface {
+    border-radius: 10px;
+  }
+
+  .canvas-editor {
+    width: min(230px, calc(100vw - 40px));
+  }
+
+  .canvas-picker {
+    width: min(260px, calc(100vw - 40px));
+  }
+}
+
+/* =========================
+   Mobile chico
+========================= */
+@media (max-width: 420px) {
+  .canvas-toolbar__controls .btn {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .canvas-editor {
+    width: min(220px, calc(100vw - 28px));
+    padding: 8px;
+  }
+
+  .canvas-editor__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .canvas-picker {
+    width: min(240px, calc(100vw - 28px));
+    padding: 8px;
+  }
+
+  .canvas-picker__formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .canvas-picker__actions .btn {
+    width: 100%;
+  }
 }

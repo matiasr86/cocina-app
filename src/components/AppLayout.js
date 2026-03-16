@@ -821,11 +821,10 @@ function AppLayoutInner() {
             {/* Toolbar */}
             <div
               className="workspace__toolbar"
-              style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}
             >
               {/* IZQUIERDA */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="workspace__toolbar-left">
+                <div className="workspace__toolbar-actions">
                   {(!authReady || !user) ? (
                     <div style={{ color: '#888', fontSize: 14, fontWeight: 'bold'}}>Iniciá sesión para gestionar tus proyectos, exportar a PDF y renderizar con IA.</div>
                   ) : (
@@ -905,7 +904,7 @@ function AppLayoutInner() {
                         logoUrl="/logo512.png"
                         customerName={user?.displayName || ''}
                         customerEmail={user?.email || ''}
-                        businessPhone="3413289463"
+                        businessPhone=""
                         businessAddress=""
                       />
 
@@ -942,7 +941,7 @@ function AppLayoutInner() {
               </div>
 
               {authReady && user && (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <div className="workspace__toolbar-right">
                   <div
                     className="pill"
                     title="Renderizar con IA (consume 1 crédito)"
@@ -1019,7 +1018,11 @@ function AppLayoutInner() {
                 <div
                   key={`${w.id}:${canvasVersion}`}
                   ref={getCanvasContainerRef(w.id)}
-                  style={{ display: w.id === activeWallId ? 'block' : 'none' }}
+                  style={{
+                    display: w.id === activeWallId ? 'block' : 'none',
+                    width: '100%',
+                    minWidth: 0,
+                  }}
                 >
                   <Canvas
                     ref={getCanvasRef(w.id)}
@@ -1034,7 +1037,7 @@ function AppLayoutInner() {
             </div>
 
             <hr />
-            <span className="app__center">Consejito: Usá un lienzo amplio y ajustá las paredes al final</span>
+            <span className="workspace__hint">Consejito: Usá un lienzo amplio y ajustá las paredes al final</span>
             <div className="wall-dimensions">
               <div className="field">
                 <label>Ancho de la pared (m)</label>

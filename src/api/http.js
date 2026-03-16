@@ -4,6 +4,7 @@
 const instancia = (process.env.REACT_APP_INSTANCIA || 'base').toLowerCase();
 
 //Local
+
 export const API_BASE_URL =
   instancia === 'base'
     ? (process.env.REACT_APP_API_BASE_URL_CREDITS || 'https://easydesign.dekam.com.ar/api')
@@ -18,17 +19,15 @@ export const API_BASE_URL_CREDITS =
 //Server
 /*
 export const API_BASE_URL =
-  (typeof process !== 'undefined' &&
-    process.env &&
-    process.env.REACT_APP_API_BASE_URL) ||
-  'https://easydesign.dekam.com.ar/api';
-*/
+  instancia === 'base'
+    ? (process.env.REACT_APP_API_BASE_URL_CREDITS || 'https://cocinaplay.devcode73.com.ar/api')
+    : (process.env.REACT_APP_API_BASE_URL || 'https://cocinaplay.devcode73.com.ar/api');
 
-/*export const CREDITS_API_BASE_URL =
-  (typeof process !== 'undefined' &&
-    process.env &&
-    process.env.REACT_APP_CREDITS_API_BASE_URL) ||
-  'https://easydesign.dekam.com.ar/api';
+
+// Backend de la app base
+export const API_BASE_URL_CREDITS =
+  process.env.REACT_APP_API_BASE_URL_CREDITS || 'https://cocinaplay.devcode73.com.ar/api';
+
 */
 
 export async function http(method, path, body, token) {

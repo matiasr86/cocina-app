@@ -1,4 +1,3 @@
-// src/components/FabricatorsModal.js
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import L from 'leaflet';
@@ -43,7 +42,6 @@ function MapBox({ center, markers, height = 360 }) {
     const map = mapRef.current;
     if (!map) return;
 
-    // limpia marcadores previos
     map.eachLayer((layer) => {
       if (layer instanceof L.TileLayer) return;
       map.removeLayer(layer);
@@ -87,13 +85,16 @@ export default function FabricatorsModal({ open, onClose }) {
   const [province, setProvince] = useState('');
   const [city, setCity] = useState('');
   const [zip, setZip] = useState('');
-  const [zipLocked, setZipLocked] = useState(false); // <- ZIP aplicado solo si lo escribe el usuario
+  const [zipLocked, setZipLocked] = useState(false);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // dirección del usuario (para cercanía)
   const [myAddr, setMyAddr] = useState('');
   const [myPos, setMyPos] = useState(null);
+
+  const DEFAULT_BIAS = useMemo(() => ({ lat: -32.958, lng: -60.639 }), []);
+  const biasLatLng = myPos || DEFAULT_BIAS;
 
   // alta
   const [form, setForm] = useState({
@@ -116,7 +117,6 @@ export default function FabricatorsModal({ open, onClose }) {
 
       let items = Array.isArray(js?.items) ? js.items : [];
 
-      // ZIP solo si lo escribió a mano o si no hay dirección de origen
       if (zip.trim() && (zipLocked || !myPos)) {
         const z = zip.trim().toLowerCase();
         items = items.filter((f) => String(f?.zip || '').toLowerCase().includes(z));
@@ -133,7 +133,6 @@ export default function FabricatorsModal({ open, onClose }) {
 
   useEffect(() => { if (open) fetchList(); }, [open, fetchList]);
 
-  // Top 10 más cercanos si hay dirección del usuario
   const visibleList = useMemo(() => {
     if (!myPos) return list;
     const withD = list.map((f) => {
@@ -205,11 +204,9 @@ export default function FabricatorsModal({ open, onClose }) {
 
   if (!open) return null;
 
-  // ⬇️ Renderizamos por portal para salir del stacking context del topbar
   return createPortal(
     <div className="fm-modal-backdrop" role="dialog" aria-modal="true">
       <div className="fm-card" onClick={(e) => e.stopPropagation()}>
-        {/* Header (sticky) */}
         <div className="fm-header">
           <strong>Fabricantes</strong>
           <div className="fm-tabs">
@@ -220,11 +217,9 @@ export default function FabricatorsModal({ open, onClose }) {
           <button className="fm-btn" onClick={onClose}>Cerrar</button>
         </div>
 
-        {/* Body con scroll */}
         <div className="fm-body">
           {tab === 'search' ? (
             <div className="fm-search-grid">
-              {/* Panel filtros */}
               <div className="fm-panel">
                 <div className="fm-field">
                   <label>Provincia</label>
@@ -245,7 +240,6 @@ export default function FabricatorsModal({ open, onClose }) {
                   {zip && zipLocked && <span className="fm-tip">Filtrando por ZIP (escrito manualmente)</span>}
                 </div>
 
-                {/* Dirección del usuario para cercanía */}
                 <div className="fm-field">
                   <AddressAutocomplete
                     value={myAddr}
@@ -254,13 +248,12 @@ export default function FabricatorsModal({ open, onClose }) {
                       setMyAddr(sel.address || '');
                       if (sel.city && !city) setCity(sel.city);
                       if (sel.province && !province) setProvince(sel.province);
-                      // No seteamos ZIP automáticamente
                       if (typeof sel.lat === 'number' && typeof sel.lng === 'number') {
                         setMyPos({ lat: sel.lat, lng: sel.lng });
                       }
                     }}
                     placeholder="Tu dirección (para ordenar por cercanía)"
-                    biasLatLng={myPos || { lat: -32.958, lng: -60.639 }}
+                    biasLatLng={biasLatLng}
                   />
                   {!!myPos && (
                     <div className="fm-addr-actions">
@@ -294,7 +287,6 @@ export default function FabricatorsModal({ open, onClose }) {
                 </p>
               </div>
 
-              {/* Mapa + resultados */}
               <div className="fm-right">
                 <MapBox center={mapCenter} markers={markers} height={360} />
 
@@ -331,11 +323,15 @@ export default function FabricatorsModal({ open, onClose }) {
                                   Cómo llegar
                                 </a>
                               )}
-                              {f.website && (
-                                <a className="fm-pill link" href={f.website} target="_blank" rel="noreferrer">
-                                  Sitio web
-                                </a>
-                              )}
+                              {f.website && (() => {
+                                const raw = String(f.website).trim();
+                                const href = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+                                return (
+                                  <a className="fm-pill link" href={href} target="_blank" rel="noreferrer">
+                                    Sitio web
+                                  </a>
+                                );
+                              })()}
                               {dist != null && <span className="fm-pill dist">{dist.toFixed(1)} km</span>}
                             </div>
                           </li>
@@ -347,7 +343,6 @@ export default function FabricatorsModal({ open, onClose }) {
               </div>
             </div>
           ) : (
-            /* ================== NUEVO REGISTRO ================== */
             <form className="fm-create-grid" onSubmit={handleSubmit}>
               <div className="fm-panel fm-form">
                 <div className="fm-field">

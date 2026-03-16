@@ -1,57 +1,68 @@
-/* Backdrop */
-.modal-mask {
+/* src/components/RedeemCodeModal.css */
+
+.redeem-modal__mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .55);
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1600;
-  animation: fadeIn .14s ease-out;
+  padding: 16px;
+  animation: redeemFadeIn 0.14s ease-out;
 }
 
-/* Card */
-.modal-card {
+.redeem-modal__card {
   width: min(520px, 92vw);
   background: #111214;
   color: #e9ecf1;
   border: 1px solid #24262c;
   border-radius: 14px;
-  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
   padding: 14px;
-  animation: popIn .18s ease-out;
+  animation: redeemPopIn 0.18s ease-out;
 }
 
-.modal-header {
+.redeem-modal__header {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 2px 2px 8px;
   border-bottom: 1px solid #1e2127;
   margin: -2px -2px 12px;
+  flex-wrap: wrap;
 }
 
-.modal-header .icon {
+.redeem-modal__icon {
   font-size: 20px;
-}
-.modal-title {
-  font-weight: 700;
+  line-height: 1;
 }
 
-.modal-body {
+.redeem-modal__title {
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+}
+
+.redeem-modal__spacer {
+  flex: 1 1 auto;
+}
+
+.redeem-modal__body {
   display: grid;
   gap: 10px;
 }
 
-.field label {
+.redeem-modal__field label {
   display: block;
   font-size: 13px;
   color: #aab3c2;
   margin-bottom: 6px;
+  line-height: 1.4;
 }
 
-.redeem-input {
+.redeem-modal__input {
   width: 100%;
   padding: 10px 12px;
   font-size: 15px;
@@ -60,45 +71,113 @@
   background: #0f1216;
   color: #e9ecf1;
   outline: none;
-  transition: border-color .15s, box-shadow .15s;
-}
-.redeem-input::placeholder { color: #6a7381; }
-.redeem-input:focus {
-  border-color: #3a8bff;
-  box-shadow: 0 0 0 3px rgba(58,139,255,.18);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.helper {
+.redeem-modal__input::placeholder {
+  color: #6a7381;
+}
+
+.redeem-modal__input:focus {
+  border-color: #3a8bff;
+  box-shadow: 0 0 0 3px rgba(58, 139, 255, 0.18);
+}
+
+.redeem-modal__helper {
   font-size: 12px;
   color: #8a94a5;
+  margin-top: 6px;
+  line-height: 1.4;
 }
 
-.error-text {
+.redeem-modal__error {
   font-size: 13px;
   color: #ff8a8a;
-  margin-top: 2px;
+  margin-top: 6px;
+  line-height: 1.4;
 }
 
-.modal-actions {
+.redeem-modal__actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 12px;
+  flex-wrap: wrap;
 }
 
-/* Optional little spinner inside button */
-.btn .spinner {
-  width: 16px; height: 16px;
+.redeem-modal__spinner {
+  width: 16px;
+  height: 16px;
   border: 2px solid #3b3f47;
   border-top-color: #fff;
   border-radius: 50%;
   display: inline-block;
-  animation: spin .8s linear infinite;
+  animation: redeemSpin 0.8s linear infinite;
   vertical-align: -3px;
   margin-right: 6px;
 }
 
-@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-@keyframes popIn  { from { transform: translateY(6px) scale(.98); opacity: 0 }
-                    to   { transform: translateY(0)  scale(1);    opacity: 1 } }
-@keyframes spin { from { transform: rotate(0) } to { transform: rotate(360deg) } }
+@keyframes redeemFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes redeemPopIn {
+  from {
+    transform: translateY(6px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes redeemSpin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .redeem-modal__card {
+    width: min(520px, 94vw);
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .redeem-modal__mask {
+    padding: 10px;
+  }
+
+  .redeem-modal__card {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .redeem-modal__header {
+    gap: 8px;
+  }
+
+  .redeem-modal__title {
+    font-size: 17px;
+  }
+
+  .redeem-modal__spacer {
+    display: none;
+  }
+
+  .redeem-modal__header .btn {
+    width: 100%;
+  }
+
+  .redeem-modal__actions {
+    flex-direction: column;
+  }
+
+  .redeem-modal__actions .btn {
+    width: 100%;
+  }
+}

@@ -15,7 +15,10 @@ export default function Footer() {
           <span className="app-footer__dot" aria-hidden>•</span>
           <span className="app-footer__tag">Beta</span>
         </div>
-        <button className="btn primary" onClick={() => setOpenPanel(true)}>Gestionar cookies</button>
+        <button className="app-footer__cookiesBtn" onClick={() => setOpenPanel(true)}>
+          Gestionar cookies
+        </button>
+
 
         <div className="app-footer__right">
           <span className="app-footer__credit">

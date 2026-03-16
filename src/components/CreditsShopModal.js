@@ -47,7 +47,7 @@ export default function CreditsShopModal({
     >
       <div className="shopModal" onClick={(e) => e.stopPropagation()}>
         <header className="shopHeader">
-          <strong>Packs de créditos</strong>
+          <strong className="shopHeader__title">Packs de créditos</strong>
           <button className="btn" onClick={onClose}>Cerrar</button>
         </header>
       
@@ -61,7 +61,7 @@ export default function CreditsShopModal({
           {packs.map((p) => (
             <article key={p.id} className="shopCard">
               <h3 className="shopCard__title">{p.title}</h3>
-              <h7 className="shopCard__cost">{p.cost}</h7>
+              <div className="shopCard__cost">{p.cost}</div>
               <p className="shopCard__desc">{p.blurb}</p>
               <div className="shopCard__actions">
                 {/* Botón en solo-lectura hasta abrir Odoo */}

@@ -34,10 +34,22 @@ export default function AddressAutocomplete({
   const [loading, setLoading] = useState(false);
   const boxRef = useRef(null);
   const controllerRef = useRef(null);
+  const inputRef = useRef(null);
+  const justSelectedRef = useRef(false);
 
   const q = useDebounced((value || '').trim(), 250);
 
+  // 👇 usar lat/lng para no depender de la identidad del objeto
+  const biasLat = biasLatLng?.lat;
+  const biasLng = biasLatLng?.lng;
+
   useEffect(() => {
+    // ✅ si venimos de una selección, NO hacemos fetch que reabra el dropdown
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return;
+    }
+
     if (!q || !GEO_KEY) {
       setItems([]);
       setOpen(false);
@@ -59,9 +71,8 @@ export default function AddressAutocomplete({
       filter: `countrycode:${COUNTRY}`,
     });
 
-    // Geoapify espera bias=proximity:lon,lat
-    if (biasLatLng && typeof biasLatLng.lat === 'number' && typeof biasLatLng.lng === 'number') {
-      params.set('bias', `proximity:${biasLatLng.lng},${biasLatLng.lat}`);
+    if (typeof biasLat === 'number' && typeof biasLng === 'number') {
+      params.set('bias', `proximity:${biasLng},${biasLat}`);
     }
 
     fetch(`${API_URL}?${params.toString()}`, { signal: ctrl.signal })
@@ -81,8 +92,12 @@ export default function AddressAutocomplete({
             lat, lng,
           };
         });
+
         setItems(list);
-        setOpen(list.length > 0);
+
+        // ✅ abrir solo si el input está enfocado (evita aperturas “solas”)
+        const isFocused = document.activeElement === inputRef.current;
+        setOpen(isFocused && list.length > 0);
       })
       .catch((e) => {
         if (e?.name !== 'AbortError') {
@@ -96,7 +111,7 @@ export default function AddressAutocomplete({
     return () => {
       try { ctrl.abort(); } catch {}
     };
-  }, [q, biasLatLng]);
+  }, [q, biasLat, biasLng]);
 
   useEffect(() => {
     const onDocClick = (e) => {
@@ -129,6 +144,7 @@ export default function AddressAutocomplete({
     >
       <label style={{ fontSize: 13, color: '#bbb' }}>Dirección</label>
       <input
+        ref={inputRef}
         type="text"
         value={value || ''}
         onChange={(e) => onChange?.(e.target.value)}
@@ -172,7 +188,9 @@ export default function AddressAutocomplete({
                   <button
                     type="button"
                     onClick={() => {
+                      justSelectedRef.current = true;  // ✅ evita refetch que reabra
                       setOpen(false);
+                      setItems([]);                   // ✅ evita reabrir por onFocus
                       onSelect?.({
                         address: it.label,
                         city: it.city,
@@ -181,6 +199,8 @@ export default function AddressAutocomplete({
                         lat: it.lat,
                         lng: it.lng,
                       });
+                      // ✅ sacar foco para que no reabra por focus
+                      setTimeout(() => inputRef.current?.blur(), 0);
                     }}
                     style={{
                       width: '100%',

@@ -1,26 +1,31 @@
 # syntax=docker/dockerfile:1
 
-# Etapa 1: build de producción
 FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
-
 COPY . .
 
-# Queda horneado en el bundle (por instancia)
+ARG REACT_APP_RECAPTCHA_SITE_KEY
+ARG REACT_APP_GEOAPIFY_KEY
+ARG REACT_APP_ADMIN_EMAIL
 ARG REACT_APP_API_BASE_URL
+ARG REACT_APP_API_BASE_URL_CREDITS
+ARG REACT_APP_INSTANCIA
+
+ENV REACT_APP_RECAPTCHA_SITE_KEY=$REACT_APP_RECAPTCHA_SITE_KEY
+ENV REACT_APP_GEOAPIFY_KEY=$REACT_APP_GEOAPIFY_KEY
+ENV REACT_APP_ADMIN_EMAIL=$REACT_APP_ADMIN_EMAIL
 ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
+ENV REACT_APP_API_BASE_URL_CREDITS=$REACT_APP_API_BASE_URL_CREDITS
+ENV REACT_APP_INSTANCIA=$REACT_APP_INSTANCIA
 
 RUN npm run build
 
-# Etapa 2: servir estáticos con 'serve'
 FROM node:20-alpine
 WORKDIR /app
-
-RUN npm install -g serve
+RUN npm i -g serve
 COPY --from=build /app/build ./build
-
 EXPOSE 3000
 CMD ["serve", "-s", "build", "-l", "3000"]

@@ -5,6 +5,8 @@ import { useToast } from './ToastProvider';
 import { useAuth } from '../context/AuthContext';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './AdminFabricatorsModal.css';
+
 
 const GEO_KEY =
   (typeof process !== 'undefined' && process.env?.REACT_APP_GEOAPIFY_KEY) ||
@@ -68,10 +70,10 @@ function MapPreview({ lat, lng, address }) {
 
   if (!hasCoords) {
     return (
-      <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="afm-mapLinks">
         {address ? (
           <a
-            className="pill"
+            className="afm-pill afm-pill--link"
             href={`https://www.google.com/maps?q=${encodeURIComponent(address)}`}
             target="_blank"
             rel="noreferrer"
@@ -79,7 +81,7 @@ function MapPreview({ lat, lng, address }) {
             Abrir en Google Maps
           </a>
         ) : (
-          <span className="pill" style={{ background: '#251e00', color: '#ffda7f' }}>
+          <span className="afm-pill afm-pill--warn">
             Sin coordenadas
           </span>
         )}
@@ -88,20 +90,14 @@ function MapPreview({ lat, lng, address }) {
   }
 
   return (
-    <div style={{ marginTop: 10 }}>
+    <div className="afm-mapBlock">
       <div
         ref={containerRef}
-        style={{
-          width: '100%',
-          height: 280,
-          borderRadius: 10,
-          overflow: 'hidden',
-          border: '1px solid #2a2a2a',
-        }}
+        className="afm-mapCanvas"
       />
-      <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+      <div className="afm-mapLinks">
         <a
-          className="pill"
+          className="afm-pill afm-pill--link"
           href={`https://www.google.com/maps?q=${encodeURIComponent(address || `${lat},${lng}`)}`}
           target="_blank"
           rel="noreferrer"
@@ -109,7 +105,7 @@ function MapPreview({ lat, lng, address }) {
           Abrir en Google Maps
         </a>
         <a
-          className="pill"
+          className="afm-pill afm-pill--link"
           href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`}
           target="_blank"
           rel="noreferrer"
@@ -267,43 +263,20 @@ export default function AdminFabricatorsModal({ open, onClose }) {
     <div
       role="dialog"
       aria-modal="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 2200,
-        display: 'grid',
-        placeItems: 'center',
-        background: 'rgba(0,0,0,.5)',
-      }}
+      className="afm-overlay"
     >
+
       {/* NO cerrar al click afuera */}
       <div
-        style={{
-          width: 'min(1100px, 95vw)',
-          maxHeight: '90vh',
-          background: '#0f0f0f',
-          color: '#eee',
-          borderRadius: 14,
-          boxShadow: '0 10px 40px rgba(0,0,0,.55)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
+        className="afm-card"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div
-          style={{
-            padding: 14,
-            borderBottom: '1px solid #222',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-          }}
-        >
-          <strong style={{ fontSize: 18 }}>Administrar fabricantes</strong>
 
-          <div style={{ display: 'flex', gap: 8, marginLeft: 10 }}>
+        {/* Header */}
+        <div className="afm-header">
+          <strong className="afm-title">Administrar fabricantes</strong>
+
+          <div className="afm-tabs">
             <button className={`btn ${tab === 'pending' ? 'primary' : ''}`} onClick={() => setTab('pending')}>
               Pendientes
             </button>
@@ -315,88 +288,88 @@ export default function AdminFabricatorsModal({ open, onClose }) {
             </button>
           </div>
 
-          <div style={{ flex: 1 }} />
+          <div className="afm-spacer" />
 
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por nombre, localidad, CP, email…"
-            style={{
-              padding: '8px 10px',
-              borderRadius: 10,
-              background: '#171717',
-              color: '#ddd',
-              border: '1px solid #2a2a2a',
-              minWidth: 360,
-            }}
-          />
-          <button className="btn" onClick={fetchList} disabled={loading}>
-            {loading ? 'Buscando…' : 'Buscar'}
-          </button>
-          <button className="btn" onClick={onClose}>
-            Cerrar
-          </button>
+
+          <div className="afm-header__right">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar por nombre, localidad, CP, email…"
+              className="afm-input"
+            />
+            <button className="btn" onClick={fetchList} disabled={loading}>
+              {loading ? 'Buscando…' : 'Buscar'}
+            </button>
+            <button className="btn" onClick={onClose}>
+              Cerrar
+            </button>
+          </div>
+
         </div>
 
         {/* Body */}
-        <div style={{ padding: 14, overflow: 'auto' }}>
+        <div className="afm-body">
+
           {loading ? (
-            <div style={{ color: '#bbb' }}>Cargando…</div>
+            <div className="afm-hint">Cargando…</div>
+
           ) : filtered.length === 0 ? (
-            <div style={{ color: '#bbb' }}>No hay registros.</div>
+            <div className="afm-hint">No hay registros.</div>
+
           ) : (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
+            <ul className="afm-list">
+
               {filtered.map((f) => {
                 const lat = f?.geo?.lat;
                 const lng = f?.geo?.lng;
                 const hasCoords = (lat || lat === 0) && (lng || lng === 0);
 
                 return (
-                  <li
-                    key={f._id}
-                    style={{
-                      border: '1px solid #2a2a2a',
-                      borderRadius: 10,
-                      padding: 12,
-                      background: '#131313',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <strong style={{ color: '#fff' }}>{f.name}</strong>
+                  <li key={f._id} className="afm-item">
 
-                      <span className="pill" style={{ background: '#1e1e1e', color: '#ddd' }}>
+                    <div className="afm-row">
+                      <strong className="afm-item__title">{f.name}</strong>
+
+                      <span className="afm-pill">
+
                         {f.city || '—'}, {f.province || '—'} {f.zip ? `(${f.zip})` : ''}
                       </span>
 
-                      {f.website && (
-                        <a
-                          href={f.website}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="pill"
-                          style={{ textDecoration: 'none' }}
-                        >
-                          Sitio web
-                        </a>
-                      )}
+                      {(() => {
+                        if (!f.website) return null;
+                        const raw = String(f.website).trim();
+                        const href = /^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`;
+                        return (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="afm-pill afm-pill--link"
+                          >
+                            Sitio web
+                          </a>
+                        );
+                      })()}
 
-                      <div style={{ flex: 1 }} />
+                      <div className="afm-spacer" />
+
 
                       {f.phone && (
-                        <span style={{ color: '#bbb' }}>
+                        <span className="afm-muted">
                           <span>📞 </span>
                           {f.phone}
                         </span>
                       )}
                       {f.email && (
-                        <span style={{ color: '#bbb' }}>
+                        <span className="afm-muted">
                           &nbsp;• ✉️ {f.email}
                         </span>
                       )}
                     </div>
 
                     {f.address && (
-                      <div style={{ color: '#aaa', marginTop: 6 }}>
+                      <div className="afm-address">
                         <a
                           href={`https://www.google.com/maps?q=${encodeURIComponent(f.address)}`}
                           target="_blank"
@@ -410,7 +383,7 @@ export default function AdminFabricatorsModal({ open, onClose }) {
                     )}
 
                     {/* Acciones */}
-                    <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div className="afm-actions">
                       {tab !== 'approved' && (
                         <button
                           className="btn primary"
@@ -437,7 +410,7 @@ export default function AdminFabricatorsModal({ open, onClose }) {
                         {openMapId === f._id ? 'Ocultar mapa' : 'Ver mapa'}
                       </button>
                       {hasCoords && (
-                        <span className="pill" style={{ background: '#16211f', color: '#b0ffe0' }}>
+                        <span className="afm-pill afm-pill--coords">
                           {lat.toFixed(6)}, {lng.toFixed(6)}
                         </span>
                       )}

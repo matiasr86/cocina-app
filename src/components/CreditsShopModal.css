@@ -1,40 +1,44 @@
-a {
-  text-decoration: none;
-}
+/* src/components/CreditsShopModal.css */
 
 .shopOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.60);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1800;
+  padding: 16px;
 }
 
 .shopModal {
   width: min(1000px, 94vw);
-  max-height: 90vh;
+  max-height: 90dvh;
   background: #111;
   color: #fff;
   border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   overflow: auto;
+  border: 1px solid #222;
 }
 
 .shopHeader {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
-.shopHeader strong {
+
+.shopHeader__title {
   font-size: 22px;
   font-weight: 800;
+  line-height: 1.2;
 }
+
 .shopHeader .btn {
   margin-left: auto;
 }
@@ -43,11 +47,12 @@ a {
   color: #ddd;
   font-size: 14px;
   margin: 0;
+  line-height: 1.45;
 }
 
 .shopGrid {
   display: grid;
-  grid-template-columns: repeat( auto-fit, minmax(220px, 1fr) );
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
   margin-top: 6px;
 }
@@ -60,27 +65,34 @@ a {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color .15s ease, transform .15s ease;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  min-width: 0;
 }
-.shopCard:hover { border-color: #3a3a3a; transform: translateY(-1px); }
+
+.shopCard:hover {
+  border-color: #3a3a3a;
+  transform: translateY(-1px);
+}
 
 .shopCard__title {
   margin: 0;
   font-size: 18px;
   font-weight: 800;
+  line-height: 1.25;
 }
 
 .shopCard__cost {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
+  color: #fff;
 }
 
 .shopCard__desc {
   margin: 0;
   color: #bbb;
   font-size: 14px;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .shopCard__actions {
@@ -88,9 +100,104 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.shopCard__link {
+  text-decoration: none;
 }
 
 .shopFootnote {
   color: #999;
   font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .shopModal {
+    padding: 16px;
+  }
+
+  .shopHeader__title {
+    font-size: 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .shopOverlay {
+    padding: 10px;
+  }
+
+  .shopModal {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .shopHeader {
+    gap: 10px;
+  }
+
+  .shopHeader__title {
+    width: 100%;
+    font-size: 18px;
+  }
+
+  .shopHeader .btn {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .shopGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .shopCard {
+    padding: 14px;
+  }
+
+  .shopCard__title {
+    font-size: 17px;
+  }
+
+  .shopCard__cost {
+    font-size: 15px;
+  }
+
+  .shopCard__desc {
+    font-size: 13px;
+  }
+
+  .shopCard__actions {
+    width: 100%;
+  }
+
+  .shopCard__actions .btn,
+  .shopCard__actions a {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Mobile chico */
+@media (max-width: 420px) {
+  .shopModal {
+    padding: 12px;
+  }
+
+  .shopHeader__title {
+    font-size: 17px;
+  }
+
+  .shopIntro {
+    font-size: 13px;
+  }
+
+  .shopFootnote {
+    font-size: 11px;
+  }
 }

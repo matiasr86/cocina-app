@@ -1,14 +1,87 @@
+/* src/components/Sidebar.css */
+
 .sidebar {
-  width: 300px;   /* más angosto */
-  padding: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 12px;
   overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
-.sb-section {
-  border: 1px solid #eee;
-  border-radius: 10px;
+.sb-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sb-search {
+  position: relative;
   margin-bottom: 10px;
+}
+
+.sb-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 38px 10px 12px;
+  border: 1px solid #dbe1e8;
+  border-radius: 10px;
   background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sb-search input:focus {
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.15);
+}
+
+.sb-search input::placeholder {
+  color: #94a3b8;
+}
+
+.sb-search .clear {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sb-search .clear:hover {
+  background: #f1f5f9;
+}
+
+.sidebar hr {
+  border: 0;
+  border-top: 1px solid #eef2f7;
+  margin: 10px 0 14px;
+}
+
+/* =========================
+   Secciones
+========================= */
+.sb-section {
+  border: 1px solid #eaeef3;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  background: #fff;
+  overflow: hidden;
 }
 
 .sb-section-header {
@@ -16,32 +89,61 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 10px 12px;
   border: none;
-  background: #fafafa;
+  background: #f8fafc;
   cursor: pointer;
-  border-radius: 10px 10px 0 0;
-  font-weight: 600;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.sb-section-header:hover {
+  background: #f1f5f9;
+}
+
+.sb-section-title {
+  min-width: 0;
+  flex: 1;
+}
+
+.sb-chev {
+  flex: 0 0 auto;
+  color: #475569;
+  font-size: 13px;
 }
 
 .sb-section-body {
   padding: 8px;
+  display: grid;
+  gap: 8px;
 }
 
+/* =========================
+   Card de módulo
+========================= */
+.sb-card,
 .sb-card--simple {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 8px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  margin-bottom: 6px;
+  padding: 8px 10px;
+  border: 1px solid #eaeef3;
+  border-radius: 10px;
   background: #fff;
-  transition: box-shadow .15s ease, border-color .15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.04s ease;
+  min-width: 0;
 }
+
 .sb-card--simple:hover {
-  border-color: #ddd;
-  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  border-color: #d8dee6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.sb-card--simple:active {
+  transform: translateY(1px);
 }
 
 .sb-card-fig {
@@ -49,7 +151,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.sb-card-fig img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .sb-thumb-fallback {
@@ -57,35 +168,122 @@
   height: 40px;
   border-radius: 6px;
   background: #f3f6fb;
-  border: 1px dashed #ccc;
+  border: 1px dashed #cbd5e1;
 }
 
 .sb-card-meta {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .sb-card-title {
   font-weight: 600;
   color: #0f172a;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .sb-card-label {
-  margin-top: 2px;
-  display: inline-block;
+  display: inline-flex;
+  align-self: flex-start;
   padding: 2px 6px;
   border-radius: 999px;
   font-size: 11px;
+  font-weight: 600;
   background: #f1f5f9;
   color: #0f172a;
   border: 1px solid #e2e8f0;
 }
 
 .sb-card-sub {
-  margin-top: 2px;
   font-size: 12px;
   color: #64748b;
+  line-height: 1.3;
+}
+
+/* =========================
+   Tablet
+========================= */
+@media (max-width: 992px) {
+  .sidebar {
+    padding: 10px;
+  }
+
+  .sb-title {
+    font-size: 17px;
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+@media (max-width: 640px) {
+  .sidebar {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .sb-search input {
+    font-size: 14px;
+    padding: 10px 36px 10px 12px;
+  }
+
+  .sb-section-header {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .sb-section-body {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .sb-card,
+  .sb-card--simple {
+    align-items: flex-start;
+    padding: 8px;
+  }
+
+  .sb-card-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+  }
+
+  .sb-card-sub {
+    font-size: 11px;
+  }
+}
+
+/* =========================
+   Mobile chico
+========================= */
+@media (max-width: 420px) {
+  .sidebar {
+    padding: 8px;
+  }
+
+  .sb-title {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .sb-card,
+  .sb-card--simple {
+    gap: 8px;
+  }
+
+  .sb-thumb-fallback {
+    width: 52px;
+    height: 36px;
+  }
+
+  .sb-card-label {
+    font-size: 10px;
+  }
 }

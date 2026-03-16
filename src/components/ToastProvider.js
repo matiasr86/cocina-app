@@ -56,7 +56,7 @@ export function ToastProvider({ children }) {
 
       {/* ===== TOASTS STACK (bottom-right) ===== */}
       <div style={{
-        position: 'fixed', right: 16, bottom: 16, display: 'grid', gap: 10, zIndex: 4000,
+        position: 'fixed', right: 16, bottom: 16, display: 'grid', gap: 10, zIndex: 12000,
         pointerEvents: 'none',
       }}>
         {toasts.map(t => (

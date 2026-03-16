@@ -1,0 +1,286 @@
+/* src/components/ShowcaseModal.css */
+
+.showcase-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1650;
+  padding: 16px;
+}
+
+.showcase-modal {
+  width: min(1200px, 96vw);
+  max-height: 92dvh;
+  background: #111;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  color: #e5e7eb;
+}
+
+/* Header */
+.showcase-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.showcase-header__title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.showcase-header__spacer {
+  flex: 1;
+}
+
+/* Filtros */
+.showcase-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.showcase-filterButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.showcase-filterBtn {
+  border-color: #333 !important;
+  background: #181818 !important;
+}
+
+.showcase-filterBtn.is-active {
+  border-color: #09f !important;
+  background: #0b2742 !important;
+}
+
+.showcase-search {
+  min-width: 220px;
+  margin-left: auto;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #ddd;
+}
+
+.showcase-search:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Grid */
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  overflow: auto;
+  padding-bottom: 8px;
+}
+
+.showcase-card {
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #141414;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.showcase-card:hover {
+  transform: translateY(-1px);
+  border-color: #3a3a3a;
+}
+
+.showcase-card__images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.showcase-card__img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  background: #000;
+  display: block;
+}
+
+.showcase-card__body {
+  padding: 10px;
+}
+
+.showcase-card__title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.showcase-card__type {
+  color: #9aa;
+}
+
+/* Pills / tags */
+.showcase-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.showcase-pill {
+  background: #1f1f1f;
+  border-radius: 14px;
+  padding: 4px 10px;
+  color: #bdbdbd;
+  font-size: 12px;
+  border: 1px solid #2b2b2b;
+}
+
+.showcase-pill--type {
+  margin-left: auto;
+  background: #181818;
+  color: #ddd;
+}
+
+/* Detail */
+.showcase-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.showcase-detail__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.showcase-detail__title {
+  color: #fff;
+  font-weight: 600;
+}
+
+.showcase-detail__images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  overflow: auto;
+  padding: 4px;
+}
+
+.showcase-figure {
+  background: #000;
+  border-radius: 10px;
+  border: 1px solid #222;
+  overflow: hidden;
+  margin: 0;
+}
+
+.showcase-figure__label {
+  padding: 6px 10px;
+  color: #ccc;
+  font-size: 13px;
+}
+
+.showcase-detail__img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.showcase-detail__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.showcase-detail__caption {
+  color: #9fb;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .showcase-detail__images {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .showcase-overlay {
+    padding: 8px;
+  }
+
+  .showcase-modal {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .showcase-header {
+    gap: 10px;
+  }
+
+  .showcase-header__title {
+    font-size: 15px;
+  }
+
+  .showcase-header .btn {
+    width: 100%;
+  }
+
+  .showcase-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .showcase-filterButtons {
+    width: 100%;
+  }
+
+  .showcase-filterButtons .btn {
+    flex: 1 1 auto;
+  }
+
+  .showcase-search {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .showcase-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase-card__img {
+    height: 110px;
+  }
+
+  .showcase-detail__top .btn {
+    width: 100%;
+  }
+
+  .showcase-pill--type {
+    margin-left: 0;
+  }
+}

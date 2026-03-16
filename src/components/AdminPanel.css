@@ -1,60 +1,93 @@
-/* Overlay fijo y centrado (no toca estilos .btn globales) */
+/* src/components/AdminPanel.css */
+
+/* =========================
+   Overlay fijo y centrado
+========================= */
 .admin-modal {
   position: fixed;
   inset: 0;
   z-index: 999;
-  background: rgba(0,0,0,.45);
+  background: rgba(0, 0, 0, 0.45);
   display: grid;
   place-items: center;
   padding: 16px;
 }
 
-/* Tarjeta principal */
+/* =========================
+   Tarjeta principal
+========================= */
 .admin-modal__card {
   width: min(1200px, 96vw);
-  max-height: 92vh;
+  max-height: 92dvh;
   background: #fff;
   border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   display: grid;
   grid-template-rows: auto 1fr;
   overflow: hidden;
 }
 
-/* Header fijo */
+/* =========================
+   Header
+========================= */
 .admin-modal__header {
   display: flex;
   gap: 12px;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 14px 16px;
   border-bottom: 1px solid #eee;
   background: #fff;
 }
-.admin-modal__header h2 { margin: 0; }
-.admin-modal__header .hint { margin-left: 8px; font-size: 12px; opacity: .7; }
+
+.admin-modal__header h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.admin-modal__header .hint {
+  margin-left: 8px;
+  font-size: 12px;
+  opacity: 0.7;
+}
 
 .header-actions {
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  min-width: 0;
 }
+
 .header-actions input {
   padding: 8px 10px;
   border: 1px solid #ddd;
   border-radius: 8px;
   min-width: 240px;
+  max-width: 100%;
 }
 
-/* Cuerpo con scroll propio */
+/* =========================
+   Cuerpo con scroll
+========================= */
 .admin-modal__body {
   overflow: auto;
   padding: 14px;
   background: #fafafa;
+  min-height: 0;
 }
 
-/* =================== Acordeón =================== */
-.acc { display: grid; gap: 10px; }
+/* =========================
+   Acordeón
+========================= */
+.acc {
+  display: grid;
+  gap: 10px;
+}
 
 .acc__section {
   background: #fff;
@@ -63,7 +96,6 @@
   overflow: hidden;
 }
 
-/* Cabecera del acordeón */
 .acc__hdr {
   all: unset;
   display: flex;
@@ -74,37 +106,56 @@
   cursor: pointer;
   background: #f7f7f8;
   user-select: none;
-  color: #111; /* <-- importante: texto visible tras el all:unset */
+  color: #111;
+  box-sizing: border-box;
 }
-.acc__hdr:hover { background: #f1f1f3; }
-.acc__title { font-weight: 700; }
-.acc__spacer { flex: 1; }
+
+.acc__hdr:hover {
+  background: #f1f1f3;
+}
+
+.acc__title {
+  font-weight: 700;
+  min-width: 0;
+}
+
+.acc__spacer {
+  flex: 1;
+}
+
 .acc__count {
   font-size: 12px;
   padding: 2px 8px;
   background: #eee;
   border-radius: 999px;
+  white-space: nowrap;
 }
+
 .acc__chev {
   transform: rotate(90deg);
-  transition: transform .18s ease;
+  transition: transform 0.18s ease;
   margin-left: 6px;
   font-weight: 700;
-  opacity: .7;
+  opacity: 0.7;
+  flex: 0 0 auto;
 }
-.acc__section.is-open .acc__chev { transform: rotate(270deg); }
 
-/* Panel del acordeón */
+.acc__section.is-open .acc__chev {
+  transform: rotate(270deg);
+}
+
 .acc__panel {
   padding: 10px;
   gap: 10px;
   background: #fff;
 }
 
-/* =================== Editor de módulo =================== */
+/* =========================
+   Editor de módulo
+========================= */
 .admin-item {
   display: grid;
-  grid-template-columns: 1.2fr 0.9fr 2fr;
+  grid-template-columns: minmax(260px, 1.2fr) minmax(180px, 0.9fr) minmax(320px, 2fr);
   gap: 12px;
   align-items: flex-start;
   padding: 10px;
@@ -115,9 +166,10 @@
 
 .admin-item__left {
   display: grid;
-  grid-template-columns: 90px 1fr;
+  grid-template-columns: 90px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
+  min-width: 0;
 }
 
 .thumb {
@@ -129,42 +181,297 @@
   display: grid;
   place-items: center;
   border: 1px solid #eaeaea;
+  flex: 0 0 auto;
 }
-.thumb img { width: 100%; height: 100%; object-fit: contain; }
-.thumb__ph { font-size: 11px; color: #888; }
 
-.meta .type { font-size: 12px; color: #777; margin-bottom: 6px; }
-.meta .title { display: grid; gap: 4px; }
-.meta .title input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; }
-.chk { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: #333; }
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.thumb__ph {
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+  padding: 6px;
+}
+
+.meta {
+  min-width: 0;
+}
+
+.meta .type {
+  font-size: 12px;
+  color: #777;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.meta .title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.meta .title label {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.meta .title input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.chk {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+  color: #333;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   Precios
+========================= */
+.admin-item__prices {
+  min-width: 0;
+}
 
 .admin-item__prices .prices-row {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
-.admin-item__prices span { font-size: 13px; color: #444; }
+
+.admin-item__prices span {
+  font-size: 13px;
+  color: #444;
+}
+
+.admin-item__prices input[type='number'] {
+  max-width: 100%;
+}
+
+/* =========================
+   Medidas
+========================= */
+.admin-item__sizes {
+  min-width: 0;
+}
 
 .admin-item__sizes .sizes-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
 }
+
+.sizes-list {
+  display: grid;
+  gap: 6px;
+}
+
 .size-row {
   display: grid;
-  grid-template-columns: repeat(3, 100px) 120px auto;
+  grid-template-columns: repeat(3, 90px) 120px auto;
   gap: 8px;
   align-items: center;
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px dashed #eee;
+  min-width: 0;
 }
-.size-row.is-std { background: #fafcff; }
-.sizes-empty { font-size: 12px; color: #777; padding: 8px; }
 
-/* Botón rojo SOLO dentro del admin */
+.size-row.is-std {
+  background: #fafcff;
+}
+
+.size-row input[type='number'] {
+  max-width: 100%;
+}
+
+.sizes-empty {
+  font-size: 12px;
+  color: #777;
+  padding: 8px;
+}
+
+/* =========================
+   Botones en admin
+========================= */
+.admin-modal .btn {
+  appearance: none;
+  border-radius: 10px;
+}
+
 .admin-modal .btn.danger {
   background: #ef4444;
   border-color: #ef4444;
   color: #fff;
 }
-.admin-modal .btn.danger:hover { background: #d73737; }
+
+.admin-modal .btn.danger:hover {
+  background: #d73737;
+}
+
+/* =========================
+   Tablet grande
+========================= */
+@media (max-width: 1100px) {
+  .admin-item {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-item__sizes {
+    grid-column: 1 / -1;
+  }
+}
+
+/* =========================
+   Tablet
+========================= */
+@media (max-width: 900px) {
+  .admin-modal {
+    padding: 12px;
+  }
+
+  .admin-modal__card {
+    width: 100%;
+    max-height: 94dvh;
+  }
+
+  .admin-modal__header {
+    padding: 12px;
+  }
+
+  .admin-modal__header h2 {
+    font-size: 20px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-actions input {
+    flex: 1 1 280px;
+    min-width: 220px;
+  }
+
+  .admin-modal__body {
+    padding: 12px;
+  }
+
+  .admin-item {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-item__left,
+  .admin-item__prices,
+  .admin-item__sizes {
+    grid-column: auto;
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+@media (max-width: 640px) {
+  .admin-modal {
+    padding: 8px;
+  }
+
+  .admin-modal__card {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    border-radius: 12px;
+  }
+
+  .admin-modal__header {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .admin-modal__header h2 {
+    font-size: 18px;
+  }
+
+  .header-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .header-actions input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+  }
+
+  .admin-modal__body {
+    padding: 10px;
+  }
+
+  .acc__hdr {
+    padding: 10px 12px;
+  }
+
+  .admin-item {
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .admin-item__left {
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .thumb {
+    width: 72px;
+    height: 58px;
+  }
+
+  .admin-item__prices .prices-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .size-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 10px 0;
+  }
+
+  .size-row .btn {
+    width: 100%;
+  }
+}
+
+/* =========================
+   Mobile chico
+========================= */
+@media (max-width: 420px) {
+  .admin-modal__header h2 {
+    font-size: 17px;
+  }
+
+  .acc__count {
+    font-size: 11px;
+  }
+
+  .chk {
+    font-size: 12px;
+  }
+}

@@ -8,6 +8,7 @@ import { useConsent } from "../consent/ConsentContext";
 
 const AXIS_MARGIN   = 50;  // margen izquierdo para eje Y
 const BOTTOM_MARGIN = 50;  // margen inferior para eje X
+const RIGHT_MARGIN = 60; // margen derecho para ver bien el final del eje X
 const GRID_STEP     = 25;  // 25 px ≈ 25 cm
 const LABEL_STEP    = 50;  // 50 px ≈ 50 cm
 
@@ -44,6 +45,9 @@ function CanvasInner({
   // 1 m = 100 px
   const pxW = initialWidth  * 100;
   const pxH = initialHeight * 100;
+
+  const canvasW = pxW + AXIS_MARGIN + RIGHT_MARGIN;
+  const canvasH = pxH + BOTTOM_MARGIN;
 
   const clampZoom = (z) => Math.max(0.5, Math.min(2, z));
   const incZoom   = useCallback((d) => setZoom((z) => clampZoom(+((z + d).toFixed(2)))), []);
@@ -365,7 +369,7 @@ function CanvasInner({
   const pickerPos = (() => {
     const src = sizePrompt || linearPrompt;
     if (!src) return { left: 0, top: 0 };
-    const left = Math.min(src.dropX + AXIS_MARGIN, pxW + AXIS_MARGIN - menuW - 10);
+    const left = Math.min(src.dropX + AXIS_MARGIN, canvasW - menuW - 10);
     const top  = Math.min(src.dropY + 6, pxH - menuMaxH - 10);
     return { left: Math.max(10, left), top: Math.max(10, top) };
   })();
@@ -400,56 +404,58 @@ function CanvasInner({
     position: 'relative',
     transform: `scale(${zoom})`,
     transformOrigin: 'top left',
-    width:  pxW + AXIS_MARGIN,
-    height: pxH + BOTTOM_MARGIN,
+    width: canvasW,
+    height: canvasH,
   };
 
   const roInputStyle = { background: '#f6f7f9', color: '#555', cursor: 'not-allowed' };
 
   /* ------------ render ------------ */
   return (
-    <div style={{ flex: 1 }}>
-      {/* Header */}
-      <div style={{ padding: 10, fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{label}</span>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button className="btn ghost" onClick={() => incZoom(-0.1)}>−</button>
-          <span style={{ minWidth: 48, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
-          <button className="btn ghost" onClick={() => incZoom(+0.1)}>+</button>
-          <button className="btn ghost" onClick={resetZoom}>100%</button>
+    <div className="canvas-shell">
+          {/* Header */}
+          <div className="canvas-toolbar">
+      <span className="canvas-toolbar__label">{label}</span>
 
-          {/* Toggle grilla */}
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 10 }}>
-            <input
-              type="checkbox"
-              checked={showGrid}
-              onChange={(e) => setShowGrid(e.target.checked)}
-            />
-            <span style={{ fontWeight: 400 }}>Mostrar grilla</span>
-          </label>
-        </div>
+      <div className="canvas-toolbar__controls">
+        <button className="btn ghost canvas-toolbar__btn" onClick={() => incZoom(-0.1)}>−</button>
+        <span className="canvas-zoom__value">{Math.round(zoom * 100)}%</span>
+        <button className="btn ghost canvas-toolbar__btn" onClick={() => incZoom(+0.1)}>+</button>
+        <button className="btn ghost" onClick={resetZoom}>100%</button>
+
+        <label className="canvas-grid-toggle">
+          <input
+            type="checkbox"
+            checked={showGrid}
+            onChange={(e) => setShowGrid(e.target.checked)}
+          />
+          <span>Mostrar grilla</span>
+        </label>
       </div>
+    </div>
 
-      <div
-        className="canvas-surface"
-        ref={canvasRef}
-        style={{
-          width: pxW + AXIS_MARGIN,
-          height: pxH + BOTTOM_MARGIN,
-          position: 'relative',
-          overflow: canvasOverflow,
-        }}
-        onDragOver={handleCanvasDragOver}
-        onDrop={handleCanvasDrop}
-        onClick={handleCanvasClick}
-      >
+
+      <div className="canvas-stageScroll">
+        <div
+          className="canvas-surface"
+          ref={canvasRef}
+          style={{
+            width: canvasW,
+            height: canvasH,
+            position: 'relative',
+            overflow: canvasOverflow,
+}}
+          onDragOver={handleCanvasDragOver}
+          onDrop={handleCanvasDrop}
+          onClick={handleCanvasClick}
+        >
         {/* Capa escalada */}
         <div style={zoomLayerStyle}>
           <svg
-            width={pxW + AXIS_MARGIN}
-            height={pxH + BOTTOM_MARGIN}
+            width={canvasW}
+            height={canvasH}
             style={{ display: 'block' }}
-          >
+>
             {/* Área de trabajo con traslación */}
             <g transform={`translate(${AXIS_MARGIN}, 0)`}>
               <rect width={pxW} height={pxH} fill="#dcdcdc" stroke="#ccc" />
@@ -553,25 +559,19 @@ function CanvasInner({
         {/* Panel edición */}
         {selectedId && selectedModule && (
           <div
+            className="canvas-editor"
             style={{
-              position: 'absolute',
               left: editorPos.left,
-              top:  editorPos.top,
-              width: editorW,
-              height: editorH,
+              top: editorPos.top,
               zIndex: 10,
-              background: 'white',
-              padding: 10,
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              boxShadow: '0 2px 6px rgba(0,0,0,.1)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <div className="canvas-editor__actions">
               <button onClick={handleDelete}>Eliminar</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6, marginBottom: 8 }}>
+
+            <div className="canvas-editor__grid">
               <label>X (Cm)</label>
               <input
                 type="number"
@@ -585,7 +585,8 @@ function CanvasInner({
                 onChange={(e) => handleEdit('y', e.target.value)}
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 90px', gap: 6 }}>
+
+            <div className="canvas-editor__grid">
               <label>Ancho (Cm)</label>
               <input type="number" value={selectedModule.width} readOnly style={roInputStyle} />
               <label>Alto (Cm)</label>
@@ -597,22 +598,17 @@ function CanvasInner({
         {/* Picker estándar */}
         {sizePrompt && (
           <div
+            className="canvas-picker"
             style={{
-              position: 'absolute',
               left: pickerPos.left,
-              top:  pickerPos.top,
-              width: 260,
-              background: '#fff',
-              border: '1px solid #ddd',
-              borderRadius: 8,
-              padding: 8,
+              top: pickerPos.top,
               zIndex: 20,
-              boxShadow: '0 6px 18px rgba(0,0,0,.12)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>Elegí una medida</div>
-            <div style={{ display: 'grid', gap: 6, maxHeight: 300, overflowY: 'auto', paddingRight: 4 }}>
+            <div className="canvas-picker__title">Elegí una medida</div>
+
+            <div className="canvas-picker__list">
               {sizePrompt.data.sizes.map((s, idx) => (
                 <button
                   key={idx}
@@ -626,45 +622,48 @@ function CanvasInner({
                   {s.width} × {s.height} cm{ s.isStandard ? ' · Estándar' : '' }
                 </button>
               ))}
-              <button className="btn" onClick={() => setSizePrompt(null)}>Cancelar</button>
+
+              <button className="btn" onClick={() => setSizePrompt(null)}>
+                Cancelar
+              </button>
             </div>
           </div>
+
         )}
 
         {/* Picker lineal */}
         {linearPrompt && (
           <div
+            className="canvas-picker"
             style={{
-              position: 'absolute',
               left: pickerPos.left,
-              top:  pickerPos.top,
-              width: 260,
-              background: '#fff',
-              border: '1px solid #ddd',
-              borderRadius: 8,
-              padding: 10,
+              top: pickerPos.top,
               zIndex: 21,
-              boxShadow: '0 6px 18px rgba(0,0,0,.12)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontWeight: 700, marginBottom: 8 }}>
+            <div className="canvas-picker__title">
               {linearPrompt.data?.title || 'Módulo lineal'}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 100px', gap: 8, marginBottom: 10 }}>
+            <div className="canvas-picker__formGrid">
               <label>Largo (cm)</label>
               <input
                 type="number"
                 min={10}
                 value={linearPrompt.width}
-                onChange={(e) => setLinearPrompt((p) => ({ ...p, width: Math.max(10, Number(e.target.value) || 10) }))}
+                onChange={(e) =>
+                  setLinearPrompt((p) => ({
+                    ...p,
+                    width: Math.max(10, Number(e.target.value) || 10),
+                  }))
+                }
               />
             </div>
 
-            <div style={{ marginBottom: 10 }}>
-              <div style={{ marginBottom: 6, fontWeight: 600 }}>Alto</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div className="canvas-picker__section">
+              <div className="canvas-picker__sectionTitle">Alto</div>
+              <div className="canvas-picker__chips">
                 {linearPrompt.heights.map((h) => (
                   <button
                     key={h}
@@ -677,8 +676,10 @@ function CanvasInner({
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button className="btn ghost" onClick={() => setLinearPrompt(null)}>Cancelar</button>
+            <div className="canvas-picker__actions">
+              <button className="btn ghost" onClick={() => setLinearPrompt(null)}>
+                Cancelar
+              </button>
               <button
                 className="btn primary"
                 onClick={() => {
@@ -696,7 +697,9 @@ function CanvasInner({
               </button>
             </div>
           </div>
+
         )}
+        </div>
       </div>
     </div>
   );

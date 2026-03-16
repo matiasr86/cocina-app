@@ -1,8 +1,138 @@
-.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.25); display:flex; align-items:center; justify-content:center; z-index: 999; }
-.modal { width: 420px; max-width: 92vw; background:#fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
-.modal__head { display:flex; align-items:center; justify-content:space-between; padding: 14px 16px; border-bottom: 1px solid #eee; }
-.modal__body { padding: 16px; }
-.btn { padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer; }
-.btn.primary { background:#1976d2; color:#fff; border-color:#1976d2; }
-.btn.danger { background:#ff4d4f; color:#fff; border-color:#ff4d4f; }
-.icon { background: transparent; border: none; font-size: 18px; cursor: pointer; }
+/* src/components/FirebaseAuthModal.css */
+
+.fauth-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.fauth-modal {
+  width: 420px;
+  max-width: 92vw;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.fauth-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.fauth-modal__title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.fauth-modal__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fauth-text {
+  margin: 0;
+  color: #374151;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.fauth-btn {
+  appearance: none;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.04s ease;
+}
+
+.fauth-btn:hover {
+  background: #f9fafb;
+}
+
+.fauth-btn:active {
+  transform: translateY(1px);
+}
+
+.fauth-btn--primary {
+  background: #1976d2;
+  color: #fff;
+  border-color: #1976d2;
+}
+
+.fauth-btn--primary:hover {
+  background: #1668b8;
+}
+
+.fauth-btn--danger {
+  background: #ff4d4f;
+  color: #fff;
+  border-color: #ff4d4f;
+}
+
+.fauth-btn--danger:hover {
+  background: #eb3f41;
+}
+
+.fauth-iconBtn {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.fauth-iconBtn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .fauth-backdrop {
+    padding: 10px;
+  }
+
+  .fauth-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .fauth-modal__head {
+    padding: 12px;
+  }
+
+  .fauth-modal__title {
+    font-size: 18px;
+  }
+
+  .fauth-modal__body {
+    padding: 12px;
+  }
+
+  .fauth-btn {
+    width: 100%;
+  }
+}

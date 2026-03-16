@@ -14,7 +14,7 @@ export default function PdfExportButton({
   logoUrl = '/logo512.png',
   customerName = '',
   customerEmail = '',
-  businessPhone = '3413289463',
+  businessPhone = '',
   businessAddress = '',
 }) {
   const [loading, setLoading] = useState(false);

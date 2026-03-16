@@ -23,25 +23,31 @@ export default function RedeemCodeModal({
 
   if (!open) return null;
 
-  const close = () => { if (!busy) onClose?.(); };
-
-  const onKeyDown = (e) => {
-    if (e.key === 'Escape') close();
-    if (e.key === 'Enter') submit();
+  const close = () => {
+    if (!busy) onClose?.();
   };
 
   const submit = async () => {
     const v = code.trim();
-    if (!v) { setError('Ingresá un código.'); return; }
+    if (!v) {
+      setError('Ingresá un código.');
+      return;
+    }
+
     setError('');
     setBusy(true);
+
     try {
       const token = await getIdToken();
       const r = await fetch(`${apiBase}/credits/redeem`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ code: v }),
       });
+
       const data = await r.json().catch(() => ({}));
 
       if (!r.ok || !data?.ok) {
@@ -56,15 +62,17 @@ export default function RedeemCodeModal({
           unable_to_resolve_credits: 'No pudimos determinar los créditos de este código.',
           redeem_failed: 'No se pudo canjear el código.',
         };
+
         setError(map[data?.error] || data?.message || `No se pudo canjear (HTTP ${r.status}).`);
         return;
       }
 
       onRedeemed?.(
-          data?.newTotal ?? data?.credits_total ?? null,   // total nuevo
-          data?.added ?? 0,                                // créditos sumados
-          data?.gift?.programName ?? data?.program ?? ''   // nombre del pack, si viene
-        );
+        data?.newTotal ?? data?.credits_total ?? null,
+        data?.added ?? 0,
+        data?.gift?.programName ?? data?.program ?? ''
+      );
+
       onClose?.();
     } catch (e) {
       setError('Error de red. Probá de nuevo.');
@@ -73,30 +81,42 @@ export default function RedeemCodeModal({
     }
   };
 
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') close();
+    if (e.key === 'Enter') submit();
+  };
+
   return (
-    <div className="modal-mask" onClick={close} role="presentation">
+    <div className="redeem-modal__mask" onClick={close} role="presentation">
       <div
-        className="modal-card"
+        className="redeem-modal__card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="redeem-title"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={onKeyDown}
       >
-        <div className="modal-header">
-          <div className="icon">🎟️</div>
-          <div id="redeem-title" className="modal-title">Canjear código</div>
-          <div style={{ flex: 1 }} />
-          <button className="btn" onClick={close} disabled={busy}>Cerrar</button>
+        <div className="redeem-modal__header">
+          <div className="redeem-modal__icon">🎟️</div>
+          <div id="redeem-title" className="redeem-modal__title">
+            Canjear código
+          </div>
+          <div className="redeem-modal__spacer" />
+          <button className="btn" onClick={close} disabled={busy}>
+            Cerrar
+          </button>
         </div>
 
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="redeem-code">Ingresá el código que recibiste por email</label>
+        <div className="redeem-modal__body">
+          <div className="redeem-modal__field">
+            <label htmlFor="redeem-code">
+              Ingresá el código que recibiste por email
+            </label>
+
             <input
               id="redeem-code"
               ref={inputRef}
-              className="redeem-input"
+              className="redeem-modal__input"
               type="text"
               placeholder="p. ej. 044E-4FC0-4D1A"
               value={code}
@@ -105,14 +125,24 @@ export default function RedeemCodeModal({
               autoComplete="one-time-code"
               inputMode="text"
             />
-            {error && <div className="error-text">{error}</div>}
-            {!error && <div className="helper">El canje suma créditos inmediatamente a tu cuenta.</div>}
+
+            {error ? (
+              <div className="redeem-modal__error">{error}</div>
+            ) : (
+              <div className="redeem-modal__helper">
+                El canje suma créditos inmediatamente a tu cuenta.
+              </div>
+            )}
           </div>
 
-          <div className="modal-actions">
-            <button className="btn" onClick={close} disabled={busy}>Cancelar</button>
+          <div className="redeem-modal__actions">
+            <button className="btn" onClick={close} disabled={busy}>
+              Cancelar
+            </button>
+
             <button className="btn primary" onClick={submit} disabled={busy}>
-              {busy && <span className="spinner" />}Canjear
+              {busy && <span className="redeem-modal__spinner" />}
+              Canjear
             </button>
           </div>
         </div>

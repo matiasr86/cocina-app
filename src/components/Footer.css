@@ -1,5 +1,7 @@
 /* src/components/Footer.css */
+
 .app-footer {
+  margin-top: auto;
   border-top: 1px solid #e5e7eb;
   background: #fafafa;
   color: #334155;
@@ -13,17 +15,28 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* Izquierda */
+/* =========================
+   Bloques
+========================= */
+.app-footer__left,
+.app-footer__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .app-footer__brand {
   font-weight: 600;
-  letter-spacing: .2px;
+  letter-spacing: 0.2px;
 }
 
 .app-footer__dot {
-  margin: 0 8px;
-  opacity: .4;
+  opacity: 0.4;
 }
 
 .app-footer__tag {
@@ -33,14 +46,12 @@
   border-radius: 999px;
   background: #ffffff;
   color: #475569;
+  white-space: nowrap;
 }
 
-/* Derecha */
-.app-footer__right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.app-footer__credit {
+  min-width: 0;
+  color: #475569;
 }
 
 .app-footer__credit strong {
@@ -48,35 +59,107 @@
 }
 
 .app-footer__sep {
-  opacity: .4;
+  opacity: 0.4;
 }
 
 .app-footer__year {
-  opacity: .7;
+  opacity: 0.7;
+  white-space: nowrap;
 }
 
 .footer-link {
-  font-weight: bold;       /* igual que <strong> */
-  text-decoration: none;   /* quita el subrayado */
-  color: inherit;          /* usa el mismo color del texto padre */
+  font-weight: bold;
+  text-decoration: none;
+  color: inherit;
 }
 
 .footer-link:hover {
-  text-decoration: underline; /* opcional: subrayado al pasar el mouse */
+  text-decoration: underline;
+}
+
+.app-footer__cookiesBtn {
+  appearance: none;
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.04s ease;
+}
+
+.app-footer__cookiesBtn:hover {
+  background: #000;
+}
+
+.app-footer__cookiesBtn:active {
+  transform: translateY(1px);
 }
 
 
 
-/* Dark mode amistoso */
+/* =========================
+Tablet
+========================= */
+@media (max-width: 768px) {
+  .app-footer__inner {
+    padding: 12px;
+  }
+  
+  .app-footer__right {
+    gap: 6px;
+  }
+}
+
+/* =========================
+Mobile
+========================= */
+@media (max-width: 640px) {
+  .app-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .app-footer__left,
+  .app-footer__right {
+    width: 100%;
+  }
+  
+  .app-footer__right {
+    align-items: flex-start;
+  }
+
+  .app-footer__sep {
+    display: none;
+  }
+}
+
+/* =========================
+Dark mode amistoso
+========================= */
 @media (prefers-color-scheme: dark) {
   .app-footer {
     border-top-color: #2b2f36;
     background: #0f172a;
     color: #cbd5e1;
   }
+
   .app-footer__tag {
     border-color: #263042;
     background: #111827;
     color: #cbd5e1;
   }
+
+  .app-footer__credit {
+    color: #cbd5e1;
+  }
 }
+
+  @media (max-width: 640px) {
+    .app-footer__cookiesBtn {
+      width: 100%;
+    }
+  }
