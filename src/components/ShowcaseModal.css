@@ -1,5 +1,3 @@
-/* src/components/ShowcaseModal.css */
-
 .showcase-overlay {
   position: fixed;
   inset: 0;
@@ -134,7 +132,7 @@
   color: #9aa;
 }
 
-/* Pills / tags */
+/* Tags */
 .showcase-tags {
   display: flex;
   gap: 6px;
@@ -219,6 +217,15 @@
 
 /* Tablet */
 @media (max-width: 900px) {
+  .showcase-modal {
+    width: min(100%, 96vw);
+    max-height: 94dvh;
+  }
+
+  .showcase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .showcase-detail__images {
     grid-template-columns: 1fr;
   }
@@ -228,11 +235,13 @@
 @media (max-width: 640px) {
   .showcase-overlay {
     padding: 8px;
+    align-items: flex-start;
   }
 
   .showcase-modal {
     width: 100%;
     max-height: calc(100dvh - 16px);
+    margin-top: 8px;
     padding: 12px;
     border-radius: 12px;
   }
@@ -259,7 +268,7 @@
   }
 
   .showcase-filterButtons .btn {
-    flex: 1 1 auto;
+    flex: 1 1 calc(50% - 8px);
   }
 
   .showcase-search {
@@ -282,5 +291,10 @@
 
   .showcase-pill--type {
     margin-left: 0;
+  }
+
+  .showcase-detail__footer {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
