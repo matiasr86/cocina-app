@@ -89,6 +89,7 @@
   flex: 1;
   overflow: auto;
   min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== Panels / fields ===== */
@@ -200,18 +201,12 @@
   gap: 8px;
 }
 
+/* ===== Items de resultados ===== */
 .fm-item {
   padding: 10px;
   border: 1px solid #2a2a2a;
   border-radius: 10px;
   background: #141414;
-}
-
-.fm-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
 .fm-title {
@@ -236,17 +231,45 @@
   color: #b0ffe0;
 }
 
+.fm-item__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fm-item__location {
+  max-width: 100%;
+}
+
+.fm-item__contacts {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.fm-item__contacts .fm-muted {
+  line-height: 1.35;
+  word-break: break-word;
+}
+
 .fm-address {
   color: #aaa;
   margin-top: 6px;
   line-height: 1.4;
+  word-break: break-word;
 }
 
 .fm-cta {
-  margin-top: 8px;
+  margin-top: 10px;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.fm-cta .fm-pill.link {
+  text-decoration: none;
 }
 
 /* ===== Create grid ===== */
@@ -437,20 +460,74 @@
     grid-column: auto;
   }
 
+  /* un solo flujo vertical en mobile */
   .fm-right {
-    grid-template-rows: 260px minmax(220px, 1fr);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .fm-map {
+    height: 260px;
     border-radius: 10px;
+    flex: 0 0 auto;
   }
 
   .fm-actions .fm-btn {
     width: 100%;
   }
 
+  /* importante: sin scroll interno en mobile */
+  .fm-results {
+    overflow: visible;
+    min-height: auto;
+    border: 1px solid #262626;
+  }
+
+  .fm-list {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .fm-item {
+    padding: 12px;
+  }
+
+  .fm-item__top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .fm-title {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .fm-item__location {
+    align-self: flex-start;
+    white-space: normal;
+    max-width: 100%;
+  }
+
+  .fm-item__contacts .fm-muted {
+    font-size: 12px;
+  }
+
+  .fm-address {
+    font-size: 13px;
+  }
+
   .fm-cta {
     gap: 8px;
+  }
+
+  .fm-cta .fm-pill,
+  .fm-cta .fm-pill.link {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    white-space: normal;
   }
 }
 
@@ -474,12 +551,25 @@
     padding: 8px 10px;
   }
 
-  .fm-right {
-    grid-template-rows: 220px minmax(220px, 1fr);
+  .fm-map {
+    height: 220px;
   }
 
   .fm-pill {
     font-size: 11px;
     padding: 4px 8px;
+  }
+
+  .fm-item {
+    padding: 10px;
+  }
+
+  .fm-title {
+    font-size: 14px;
+  }
+
+  .fm-address,
+  .fm-item__contacts .fm-muted {
+    font-size: 12px;
   }
 }

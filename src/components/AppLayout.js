@@ -1039,25 +1039,84 @@ function AppLayoutInner() {
             <hr />
             <span className="workspace__hint">Consejito: Usá un lienzo amplio y ajustá las paredes al final</span>
             <div className="wall-dimensions">
-              <div className="field">
+              <div className="field wall-dimensions__field">
                 <label>Ancho de la pared (m)</label>
-                <input
-                  type="number"
-                  min="1"
-                  step="0.1"
-                  value={activeWall?.width ?? 4}
-                  onChange={(e) => updateActiveWall({ width: Math.max(1, parseFloat(e.target.value) || 1) })}
-                />
+                <div className="wall-stepper">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateActiveWall({
+                        width: Math.max(1, +(((activeWall?.width ?? 4) - 0.1).toFixed(1))),
+                      })
+                    }
+                  >
+                    -
+                  </button>
+
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="1"
+                    step="0.1"
+                    value={activeWall?.width ?? 4}
+                    onChange={(e) =>
+                      updateActiveWall({
+                        width: Math.max(1, parseFloat(e.target.value) || 1),
+                      })
+                    }
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateActiveWall({
+                        width: +(((activeWall?.width ?? 4) + 0.1).toFixed(1)),
+                      })
+                    }
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <div className="field">
+
+              <div className="field wall-dimensions__field">
                 <label>Alto de la pared (m)</label>
-                <input
-                  type="number"
-                  min="2"
-                  step="0.1"
-                  value={activeWall?.height ?? 3}
-                  onChange={(e) => updateActiveWall({ height: Math.max(2, parseFloat(e.target.value) || 2) })}
-                />
+                <div className="wall-stepper">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateActiveWall({
+                        height: Math.max(2, +(((activeWall?.height ?? 3) - 0.1).toFixed(1))),
+                      })
+                    }
+                  >
+                    -
+                  </button>
+
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="2"
+                    step="0.1"
+                    value={activeWall?.height ?? 3}
+                    onChange={(e) =>
+                      updateActiveWall({
+                        height: Math.max(2, parseFloat(e.target.value) || 2),
+                      })
+                    }
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateActiveWall({
+                        height: +(((activeWall?.height ?? 3) + 0.1).toFixed(1)),
+                      })
+                    }
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
           </div>
